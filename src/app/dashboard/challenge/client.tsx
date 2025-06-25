@@ -78,9 +78,9 @@ export function DailyChallengePageClient({ challenge, initialComments, hasSubmit
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
-        <h1 className="font-headline text-3xl font-bold">Daily Challenge</h1>
+        <h1 className="font-headline text-3xl font-bold">Your Personalized Daily Challenge</h1>
         <p className="text-muted-foreground">
-          A new STEM problem every day to test your skills.
+          A new STEM problem every day, tailored to your learning progress.
         </p>
       </div>
 
@@ -95,7 +95,7 @@ export function DailyChallengePageClient({ challenge, initialComments, hasSubmit
                 <Badge variant="secondary">{challenge.topic}</Badge>
               </div>
               <CardDescription>
-                Posted: {new Date(challenge.date).toLocaleDateString()}
+                Challenge for {new Date(challenge.date).toLocaleDateString()}
               </CardDescription>
             </CardHeader>
             <CardContent>

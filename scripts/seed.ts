@@ -144,14 +144,16 @@ async function seed() {
             FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE
         );
 
-        -- Daily Challenge Table
-        DROP TABLE IF EXISTS challenges;
-        CREATE TABLE challenges (
+        -- User Daily Challenge Table
+        DROP TABLE IF EXISTS user_challenges;
+        CREATE TABLE user_challenges (
             id TEXT PRIMARY KEY,
+            userId TEXT NOT NULL,
             title TEXT NOT NULL,
             problem TEXT NOT NULL,
             topic TEXT NOT NULL,
-            "date" TEXT NOT NULL
+            "date" TEXT NOT NULL,
+            FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE
         );
 
         -- Challenge Comments Table
@@ -162,7 +164,7 @@ async function seed() {
             userId TEXT NOT NULL,
             comment TEXT NOT NULL,
             timestamp TEXT NOT NULL,
-            FOREIGN KEY(challengeId) REFERENCES challenges(id) ON DELETE CASCADE,
+            FOREIGN KEY(challengeId) REFERENCES user_challenges(id) ON DELETE CASCADE,
             FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE
         );
 
@@ -174,7 +176,7 @@ async function seed() {
             userId TEXT NOT NULL,
             content TEXT NOT NULL,
             submittedAt TEXT NOT NULL,
-            FOREIGN KEY(challengeId) REFERENCES challenges(id) ON DELETE CASCADE,
+            FOREIGN KEY(challengeId) REFERENCES user_challenges(id) ON DELETE CASCADE,
             FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE,
             UNIQUE(challengeId, userId)
         );
@@ -306,32 +308,6 @@ async function seed() {
     await db.run('INSERT INTO user_streaks (userId, "date") VALUES (?, ?)', studentId1, yesterday.toISOString().split('T')[0]);
     await db.run('INSERT INTO user_badges (userId, badgeId, earnedAt) VALUES (?, ?, ?)', studentId1, 'b1', now.toISOString()); // Math Beginner badge
     console.log('Initial student progress seeded.');
-    
-    // Seed Challenges
-    console.log('Seeding challenges...');
-    await db.run('INSERT INTO challenges (id, title, problem, topic, "date") VALUES (?, ?, ?, ?, ?)',
-        'dc1',
-        "The Traveling Salesperson's Lunch",
-        'A salesperson starts at city A, needs to visit cities B, C, and D exactly once, and then return to city A. The distances are as follows: A-B=10km, A-C=15km, A-D=20km, B-C=35km, B-D=25km, C-D=30km. What is the shortest possible route the salesperson can take?',
-        'Math',
-        new Date().toISOString() // Set to today
-    );
-    console.log('Challenges seeded.');
-
-    // Seed Challenge Comments for demonstration
-    console.log('Seeding initial challenge comments...');
-    await db.run('INSERT INTO challenge_comments (id, challengeId, userId, comment, timestamp) VALUES (?, ?, ?, ?, ?)', `comment_${crypto.randomUUID()}`, 'dc1', studentId1, 'This is a classic Traveling Salesperson Problem!', new Date().toISOString());
-    console.log('Initial challenge comments seeded.');
-
-    // Seed Challenge Submissions for demonstration
-    console.log('Seeding initial challenge submissions...');
-    const studentId2 = 'user_student_2';
-    await db.run(
-        'INSERT INTO challenge_submissions (id, challengeId, userId, content, submittedAt) VALUES (?, ?, ?, ?, ?)',
-        `sub_${crypto.randomUUID()}`, 'dc1', studentId2, '<p>I think the shortest path is A -> B -> D -> C -> A. That adds up to 10 + 25 + 30 + 15 = 80km. I checked the other paths and they seemed longer.</p>', new Date().toISOString()
-    );
-    console.log('Initial challenge submissions seeded.');
-
 
     console.log('Database seeded successfully!');
     await db.close();

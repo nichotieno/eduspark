@@ -61,10 +61,11 @@ export type StudentProgress = {
 
 export type DailyChallenge = {
   id: string;
-  date: string; // e.g., '2024-07-29'
+  userId: string;
+  date: string;
   title: string;
   problem: string;
-  topic: 'Math' | 'Science' | 'CS';
+  topic: string;
 };
 
 export type ChallengeComment = {
