@@ -1,48 +1,79 @@
 
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useState, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { User } from "@/lib/definitions";
-import { updateProfile } from './actions';
+import { updateProfile, updateAvatar } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Pencil } from 'lucide-react';
 
 const initialFormState = { message: '', success: false, errors: {} };
 
-function SubmitButton() {
+function UpdateProfileButton() {
     const { pending } = useFormStatus();
     return <Button type="submit" disabled={pending}>{pending ? 'Updating...' : 'Update Profile'}</Button>
+}
+function UpdateAvatarButton() {
+    const { pending } = useFormStatus();
+    return <Button type="submit" disabled={pending}>{pending ? 'Saving Avatar...' : 'Save Avatar'}</Button>
 }
 
 export function ProfilePageClient({ user }: { user: User }) {
     const { toast } = useToast();
-    const [state, formAction] = useActionState(updateProfile, initialFormState);
+    const [profileState, profileFormAction] = useActionState(updateProfile, initialFormState);
+    const [avatarState, avatarFormAction] = useActionState(updateAvatar, initialFormState);
+
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (state.success) {
+        if (profileState.success) {
             toast({
                 title: "Success!",
-                description: state.message,
+                description: profileState.message,
             });
         }
-    }, [state, toast]);
+    }, [profileState, toast]);
+
+    useEffect(() => {
+        if (avatarState.success) {
+            toast({
+                title: "Success!",
+                description: avatarState.message,
+            });
+            setAvatarPreview(null); // Clear preview on success
+        }
+    }, [avatarState, toast]);
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setAvatarPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
 
     return (
         <div className="container mx-auto py-8">
             <h1 className="font-headline text-3xl font-bold mb-8">My Profile</h1>
             <Card className="max-w-2xl mx-auto">
-                <form action={formAction}>
-                    <CardHeader>
-                        <div className="flex items-center gap-6">
+                <CardHeader>
+                    <div className="flex flex-col items-center gap-6 sm:flex-row">
+                        <div className="relative group">
                             <Avatar className="h-24 w-24">
-                                <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint="person" />
+                                <AvatarImage src={avatarPreview || user.avatarUrl} alt={user.name} />
                                 <AvatarFallback>
                                 {user.name
                                     .split(" ")
@@ -50,33 +81,67 @@ export function ProfilePageClient({ user }: { user: User }) {
                                     .join("")}
                                 </AvatarFallback>
                             </Avatar>
-                            <div>
-                                <CardTitle className="text-2xl">{user.name}</CardTitle>
-                                <CardDescription className="capitalize">{user.role}</CardDescription>
-                            </div>
+                             <Label
+                                htmlFor="avatar-upload"
+                                className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <Pencil className="h-6 w-6 text-white" />
+                                <span className="sr-only">Change avatar</span>
+                            </Label>
+                            <input
+                                type="file"
+                                id="avatar-upload"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                accept="image/png, image/jpeg, image/gif"
+                                className="sr-only"
+                            />
                         </div>
-                    </CardHeader>
+                        <div>
+                            <CardTitle className="text-2xl text-center sm:text-left">{user.name}</CardTitle>
+                            <CardDescription className="capitalize text-center sm:text-left">{user.role}</CardDescription>
+                        </div>
+                    </div>
+                </CardHeader>
+
+                <form action={avatarFormAction}>
+                     {avatarPreview && (
+                        <CardContent>
+                            <input type="hidden" name="avatarUrl" value={avatarPreview} />
+                             {avatarState.errors?.avatarUrl && <p className="mb-2 text-sm text-destructive">{avatarState.errors.avatarUrl[0]}</p>}
+                            <div className="flex justify-center gap-2">
+                                <UpdateAvatarButton />
+                                <Button variant="outline" onClick={() => {
+                                    setAvatarPreview(null)
+                                    if(fileInputRef.current) fileInputRef.current.value = "";
+                                }}>Cancel</Button>
+                            </div>
+                        </CardContent>
+                    )}
+                </form>
+
+                <form action={profileFormAction}>
                     <CardContent className="space-y-6">
-                         {!state.success && state.message && !state.errors && (
+                         {!profileState.success && profileState.message && !profileState.errors && (
                             <Alert variant="destructive">
                                 <AlertCircle className="h-4 w-4" />
                                 <AlertTitle>Error</AlertTitle>
-                                <AlertDescription>{state.message}</AlertDescription>
+                                <AlertDescription>{profileState.message}</AlertDescription>
                             </Alert>
                         )}
                         <div className="space-y-2">
                             <Label htmlFor="name">Name</Label>
                             <Input id="name" name="name" defaultValue={user.name} />
-                            {state.errors?.name && <p className="mt-1 text-sm text-destructive">{state.errors.name[0]}</p>}
+                            {profileState.errors?.name && <p className="mt-1 text-sm text-destructive">{profileState.errors.name[0]}</p>}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
                             <Input id="email" type="email" defaultValue={user.email} disabled />
                         </div>
-                        <p className="text-xs text-muted-foreground">Password and avatar updates are not yet implemented.</p>
+                        <p className="text-xs text-muted-foreground">Password updates are not yet implemented.</p>
                     </CardContent>
                     <CardFooter>
-                        <SubmitButton />
+                        <UpdateProfileButton />
                     </CardFooter>
                 </form>
             </Card>
