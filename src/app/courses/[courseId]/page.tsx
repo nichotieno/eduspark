@@ -1,5 +1,8 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { mockCourses, mockLessons } from "@/lib/mock-data";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import {
   Card,
   CardDescription,
@@ -10,13 +13,22 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Circle, ChevronLeft } from "lucide-react";
 
-export default function CoursePage({
-  params,
-}: {
-  params: { courseId: string };
-}) {
+export default function CoursePage() {
+  const params = useParams();
   const course = mockCourses.find((c) => c.id === params.courseId);
   const lessons = mockLessons.filter((l) => l.courseId === params.courseId);
+  
+  const [completedLessons, setCompletedLessons] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    try {
+      const storedCompletions = JSON.parse(localStorage.getItem('completedLessons') || '{}');
+      setCompletedLessons(storedCompletions);
+    } catch (error) {
+      console.error("Failed to read completed lessons from localStorage", error);
+      setCompletedLessons({});
+    }
+  }, []);
 
   if (!course) {
     notFound();
@@ -42,12 +54,12 @@ export default function CoursePage({
       </div>
 
       <div className="space-y-4">
-        {lessons.map((lesson, index) => (
+        {lessons.map((lesson) => (
           <Link key={lesson.id} href={`/courses/${course.id}/lessons/${lesson.id}`}>
             <Card className="transition-all hover:shadow-md hover:border-primary">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div className="flex items-center gap-4">
-                  {index === 0 ? (
+                  {completedLessons[lesson.id] ? (
                     <CheckCircle className="h-6 w-6 text-green-500" />
                   ) : (
                     <Circle className="h-6 w-6 text-muted-foreground" />

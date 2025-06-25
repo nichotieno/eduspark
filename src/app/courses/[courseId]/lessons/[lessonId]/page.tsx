@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { mockLessons } from "@/lib/mock-data";
 import { notFound, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -33,8 +33,20 @@ export default function LessonPage() {
   const [showHint, setShowHint] = useState(false);
   const [lessonComplete, setLessonComplete] = useState(false);
 
+  useEffect(() => {
+    if (lessonComplete) {
+      try {
+        const completedLessons = JSON.parse(localStorage.getItem('completedLessons') || '{}');
+        completedLessons[lesson.id] = true;
+        localStorage.setItem('completedLessons', JSON.stringify(completedLessons));
+      } catch (error) {
+        console.error("Failed to update completed lessons in localStorage", error);
+      }
+    }
+  }, [lessonComplete, lesson.id]);
+
   const question = lesson.questions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex) / lesson.questions.length) * 100;
+  const progress = ((currentQuestionIndex + 1) / lesson.questions.length) * 100;
 
   const handleAnswerSelect = (option: string) => {
     if (feedback) return;
