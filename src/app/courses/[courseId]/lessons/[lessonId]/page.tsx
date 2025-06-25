@@ -20,12 +20,15 @@ import { Lightbulb, X, Check, ChevronLeft, Award, ChevronRight } from "lucide-re
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
+import { completeLesson } from "@/app/courses/actions";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LessonPage() {
   const params = useParams();
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [allLessons, setAllLessons] = useState<Lesson[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -48,15 +51,17 @@ export default function LessonPage() {
   
   useEffect(() => {
     if (lessonComplete && lesson) {
-      try {
-        const completedLessons = JSON.parse(localStorage.getItem('completedLessons') || '{}');
-        completedLessons[lesson.id] = true;
-        localStorage.setItem('completedLessons', JSON.stringify(completedLessons));
-      } catch (error) {
-        console.error("Failed to update completed lessons in localStorage", error);
-      }
+      completeLesson(lesson.id).then(result => {
+        if (!result.success) {
+          toast({
+            variant: 'destructive',
+            title: 'Error Saving Progress',
+            description: result.message,
+          });
+        }
+      });
     }
-  }, [lessonComplete, lesson]);
+  }, [lessonComplete, lesson, toast]);
   
   if (isLoading) {
       return (

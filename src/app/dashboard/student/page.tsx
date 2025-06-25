@@ -1,273 +1,105 @@
 
-"use client";
-
-import { useState, useEffect } from "react";
+import { getSession } from "@/lib/session";
+import { getDb } from "@/lib/db";
+import { redirect } from "next/navigation";
 import {
-  mockBadges,
-  mockDailyAssignments as initialAssignments,
-  type DailyAssignment,
   type Course,
+  type DailyAssignment,
   type Lesson,
 } from "@/lib/mock-data";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Flame, Medal, Sparkles, Clock, Calculator, FlaskConical, BookOpen, ChevronRight } from "lucide-react";
-import Link from "next/link";
-import { formatDistanceToNow } from 'date-fns';
-import { useSession } from "@/contexts/session-context";
-import { Skeleton } from "@/components/ui/skeleton";
+import { BookOpen, Calculator, FlaskConical } from "lucide-react";
+import { StudentDashboardClient } from "./client";
 
-const getFromLocalStorage = (key: string, defaultValue: any) => {
-  if (typeof window === 'undefined') return defaultValue;
-  const saved = localStorage.getItem(key);
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved);
-      if (key === 'assignments') {
-        return parsed.map((a: any) => ({ ...a, dueDate: new Date(a.dueDate) }));
-      }
-      return parsed;
-    } catch (e) {
-      console.error(`Parsing error from localStorage for key "${key}"`, e);
-      return defaultValue;
-    }
+
+export default async function StudentDashboardPage() {
+  const session = await getSession();
+  if (!session) {
+    redirect("/login");
   }
-  return defaultValue;
-};
 
-const StatCard = ({
-  Icon,
-  title,
-  value,
-  color,
-}: {
-  Icon: React.ElementType;
-  title: string;
-  value: string | number;
-  color: string;
-}) => (
-  <Card>
-    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      <Icon className={`h-4 w-4 ${color}`} />
-    </CardHeader>
-    <CardContent>
-      <div className="text-2xl font-bold">{value}</div>
-    </CardContent>
-  </Card>
-);
+  const db = await getDb();
 
-const CourseCard = ({
-  course,
-}: {
-  course: Course,
-}) => (
-  <Card>
-    <CardHeader>
-        <div className="mb-4 flex justify-center">
-            <div className="rounded-full bg-primary/10 p-4">
-                <course.Icon className="h-8 w-8 text-primary" />
-            </div>
-        </div>
-      <CardTitle className="text-center font-headline">{course.title}</CardTitle>
-    </CardHeader>
-    <CardContent className="flex flex-col items-center text-center">
-      <p className="mb-4 text-sm text-muted-foreground">{course.description}</p>
-      <Button asChild className="mt-auto">
-        <Link href={`/courses/${course.id}`}>View Course</Link>
-      </Button>
-    </CardContent>
-  </Card>
-);
-
-export default function StudentDashboard() {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [assignments, setAssignments] = useState<DailyAssignment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { session, isLoading: isSessionLoading } = useSession();
-
-  useEffect(() => {
-    const fetchData = async () => {
-      // Fetch content from local storage for now
-      const savedCourses = getFromLocalStorage('courses', []).map((c: any) => {
-          let IconComponent = BookOpen;
-          if (c.id === "math") IconComponent = Calculator;
-          else if (c.id === "science") IconComponent = FlaskConical;
-          return { ...c, Icon: IconComponent };
-      });
-      setCourses(savedCourses);
-      setLessons(getFromLocalStorage('lessons', []));
-      setAssignments(getFromLocalStorage('assignments', initialAssignments));
-      
-      setLoading(false);
-    };
-
-    fetchData();
-  }, []);
-
-  const userBadges = mockBadges.slice(0, 3);
-  const firstLesson = lessons.length > 0 ? lessons[0] : null;
-  const firstCourse = firstLesson ? courses.find(c => c.id === firstLesson.courseId) : null;
-
-  const now = new Date();
-  const activeAssignments = assignments.filter(
-    (assignment) => new Date(assignment.dueDate) > now
+  // Fetch dynamic stats
+  const xpResult = await db.get(
+    "SELECT SUM(xpEarned) as totalXp FROM user_progress WHERE userId = ?",
+    session.id
   );
+  const totalXp = xpResult?.totalXp || 0;
 
-  const isLoading = loading || isSessionLoading;
+  const badgesResult = await db.get(
+    "SELECT COUNT(*) as badgeCount FROM user_badges WHERE userId = ?",
+    session.id
+  );
+  const badgesEarned = badgesResult?.badgeCount || 0;
 
-  if (isLoading) {
-      return (
-          <div>
-              <Skeleton className="h-10 w-1/2 mb-8" />
-              <div className="mb-8 grid gap-4 md:grid-cols-3">
-                  <Skeleton className="h-28" />
-                  <Skeleton className="h-28" />
-                  <Skeleton className="h-28" />
-              </div>
-               <div className="grid gap-8 lg:grid-cols-3">
-                    <div className="lg:col-span-2 space-y-4">
-                        <Skeleton className="h-8 w-1/4" />
-                        <div className="grid gap-6 sm:grid-cols-2">
-                            <Skeleton className="h-60" />
-                            <Skeleton className="h-60" />
-                        </div>
-                    </div>
-                    <div className="space-y-8">
-                        <Skeleton className="h-40" />
-                        <Skeleton className="h-40" />
-                    </div>
-                </div>
-          </div>
-      )
+  // Calculate streak
+  const streakDatesResults = await db.all<{ date: string }[]>(
+    'SELECT "date" FROM user_streaks WHERE userId = ? ORDER BY "date" DESC',
+    session.id
+  );
+  const streakDates = streakDatesResults.map((r) => r.date);
+
+  let dayStreak = 0;
+  if (streakDates.length > 0) {
+    let currentStreak = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    
+    // Use UTC to avoid timezone issues with date comparisons
+    const lastDate = new Date(streakDates[0] + 'T00:00:00Z');
+
+    if (
+      lastDate.getTime() === today.getTime() ||
+      lastDate.getTime() === yesterday.getTime()
+    ) {
+      currentStreak = 1;
+      for (let i = 0; i < streakDates.length - 1; i++) {
+        const currentDate = new Date(streakDates[i] + 'T00:00:00Z');
+        const previousDate = new Date(streakDates[i + 1] + 'T00:00:00Z');
+
+        const diffTime = currentDate.getTime() - previousDate.getTime();
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+          currentStreak++;
+        } else {
+          break; // Streak is broken
+        }
+      }
+    }
+    dayStreak = currentStreak;
   }
+
+  // Fetch other data
+  const courses = await db.all<Course[]>("SELECT * FROM courses");
+  const lessons = await db.all<Lesson[]>("SELECT * FROM lessons");
+  const assignmentsData = await db.all(
+    "SELECT * FROM assignments WHERE dueDate > ?",
+    new Date().toISOString()
+  );
+  const assignments = assignmentsData.map((a) => ({
+    ...a,
+    dueDate: new Date(a.dueDate),
+  }));
+
+  // Re-hydrate Icon components
+  const coursesWithIcons = courses.map((c: any) => {
+    let IconComponent = BookOpen;
+    if (c.id === "math") IconComponent = Calculator;
+    else if (c.id === "science") IconComponent = FlaskConical;
+    return { ...c, Icon: IconComponent };
+  });
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8">
-        <h1 className="font-headline text-3xl font-bold">
-          Welcome back, {session ? session.name.split(" ")[0] : 'Student'}!
-        </h1>
-        <p className="text-muted-foreground">
-          Let&apos;s continue your learning journey.
-        </p>
-      </div>
-
-      <div className="mb-8 grid gap-4 md:grid-cols-3">
-        <StatCard
-          Icon={Sparkles}
-          title="Total XP"
-          value={1250}
-          color="text-accent"
-        />
-        <StatCard
-          Icon={Flame}
-          title="Day Streak"
-          value={14}
-          color="text-red-500"
-        />
-        <StatCard
-          Icon={Medal}
-          title="Badges Earned"
-          value={3}
-          color="text-blue-500"
-        />
-      </div>
-
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <h2 className="mb-4 font-headline text-2xl font-bold">Courses</h2>
-          <div className="grid gap-6 sm:grid-cols-2">
-            {courses.map((course) => (
-              <CourseCard key={course.id} course={course} />
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-8">
-            <div>
-                <h2 className="mb-4 font-headline text-2xl font-bold">Continue Learning</h2>
-                 {firstLesson && firstCourse ? (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>{firstLesson.title}</CardTitle>
-                            <CardDescription>{firstCourse.title}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground mb-4">You're doing great, keep it up!</p>
-                            <Button className="w-full" asChild>
-                                <Link href={`/courses/${firstLesson.courseId}/lessons/${firstLesson.id}`}>
-                                    Jump Back In
-                                </Link>
-                            </Button>
-                        </CardContent>
-                    </Card>
-                ) : (
-                  <Card>
-                    <CardContent className="flex items-center justify-center p-6 text-center">
-                      <p className="text-sm text-muted-foreground">Start a course to begin your journey!</p>
-                    </CardContent>
-                  </Card>
-                )}
-            </div>
-
-            <div>
-              <h2 className="mb-4 font-headline text-2xl font-bold">Active Assignments</h2>
-              <Card>
-                <CardContent className="pt-6">
-                  {activeAssignments.length > 0 ? (
-                    <div className="space-y-4">
-                      {activeAssignments.map((assignment) => (
-                        <Link href={`/dashboard/assignments/${assignment.id}`} key={assignment.id} className="block rounded-lg border bg-background p-4 transition-shadow hover:shadow-md hover:border-primary/50">
-                           <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="font-semibold">{assignment.title}</h3>
-                              <p className="mt-1 mb-2 text-sm text-muted-foreground">{assignment.problem}</p>
-                            </div>
-                             <ChevronRight className="h-5 w-5 text-muted-foreground mt-1 ml-4 flex-shrink-0" />
-                           </div>
-                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Clock className="h-3.5 w-3.5" />
-                                <span>Due {formatDistanceToNow(new Date(assignment.dueDate), { addSuffix: true })}</span>
-                           </div>
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center p-6 text-center">
-                        <p className="text-sm text-muted-foreground">No active assignments. Well done!</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            <div>
-            <h2 className="mb-4 font-headline text-2xl font-bold">My Badges</h2>
-            <Card>
-                <CardContent className="pt-6">
-                <div className="flex flex-wrap justify-center gap-4">
-                    {userBadges.map((badge) => (
-                    <div key={badge.id} className="flex flex-col items-center text-center">
-                        <div className="rounded-full border-2 border-accent p-3 bg-accent/10">
-                            <badge.Icon className="h-8 w-8 text-accent" />
-                        </div>
-                        <p className="mt-2 text-xs font-semibold">{badge.name}</p>
-                    </div>
-                    ))}
-                </div>
-                </CardContent>
-            </Card>
-            </div>
-        </div>
-      </div>
-    </div>
+    <StudentDashboardClient
+      user={session}
+      stats={{ totalXp, dayStreak, badgesEarned }}
+      courses={coursesWithIcons}
+      lessons={lessons}
+      assignments={assignments}
+    />
   );
 }

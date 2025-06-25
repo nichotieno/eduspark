@@ -97,6 +97,37 @@ async function seed() {
             courseId TEXT NOT NULL,
             dueDate TEXT NOT NULL
         );
+
+        -- User Progress Table (tracks completed lessons)
+        DROP TABLE IF EXISTS user_progress;
+        CREATE TABLE user_progress (
+            userId TEXT NOT NULL,
+            lessonId TEXT NOT NULL,
+            completedAt TEXT NOT NULL,
+            xpEarned INTEGER NOT NULL,
+            PRIMARY KEY(userId, lessonId),
+            FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY(lessonId) REFERENCES lessons(id) ON DELETE CASCADE
+        );
+
+        -- User Streaks Table (tracks daily activity)
+        DROP TABLE IF EXISTS user_streaks;
+        CREATE TABLE user_streaks (
+            userId TEXT NOT NULL,
+            "date" TEXT NOT NULL, -- YYYY-MM-DD
+            PRIMARY KEY(userId, "date"),
+            FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        -- User Badges Table (tracks earned badges)
+        DROP TABLE IF EXISTS user_badges;
+        CREATE TABLE user_badges (
+            userId TEXT NOT NULL,
+            badgeId TEXT NOT NULL,
+            earnedAt TEXT NOT NULL,
+            PRIMARY KEY(userId, badgeId),
+            FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE
+        );
     `);
     console.log('Migrations complete.');
 
@@ -208,6 +239,20 @@ async function seed() {
         );
     }
     console.log('Assignments seeded.');
+    
+    // Seed initial student progress for demonstration
+    console.log('Seeding initial student progress...');
+    const studentId = 'user_student_1';
+    const lessonId = 'm1'; // Intro to Algebra
+    const now = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+
+    await db.run('INSERT INTO user_progress (userId, lessonId, completedAt, xpEarned) VALUES (?, ?, ?, ?)', studentId, lessonId, now.toISOString(), 100);
+    await db.run('INSERT INTO user_streaks (userId, "date") VALUES (?, ?)', studentId, yesterday.toISOString().split('T')[0]);
+    await db.run('INSERT INTO user_badges (userId, badgeId, earnedAt) VALUES (?, ?, ?)', studentId, 'b1', now.toISOString()); // Math Beginner badge
+    console.log('Initial student progress seeded.');
+
 
     console.log('Database seeded successfully!');
     await db.close();
