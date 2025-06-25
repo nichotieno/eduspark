@@ -8,11 +8,14 @@ import {
 } from '../src/lib/mock-data';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import path from 'path';
+import os from 'os';
 
 async function seed() {
-    console.log('Opening database...');
+    const dbPath = path.join(os.tmpdir(), 'local.db');
+    console.log(`Opening database at: ${dbPath}`);
     const db = await open({
-        filename: './local.db',
+        filename: dbPath,
         driver: sqlite3.Database
     });
 

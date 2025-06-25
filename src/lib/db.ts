@@ -1,8 +1,14 @@
+
 import sqlite3 from 'sqlite3';
 import { open, type Database } from 'sqlite';
+import path from 'path';
+import os from 'os';
 
 // This is a singleton to ensure we only have one database connection.
 let db: Database | null = null;
+
+// Use a temporary directory for the database in read-only environments.
+const dbPath = path.join(os.tmpdir(), 'local.db');
 
 export async function getDb() {
   if (!db) {
@@ -10,7 +16,7 @@ export async function getDb() {
     // when the appropriate flags are passed. The library defaults to creating the file if it doesn't exist.
     try {
       db = await open({
-        filename: './local.db',
+        filename: dbPath,
         driver: sqlite3.Database
       });
     } catch (error) {
