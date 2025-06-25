@@ -67,6 +67,8 @@ import {
   BookCopy,
   BookMarked,
   FilePenLine,
+  Calculator,
+  FlaskConical,
 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -103,7 +105,19 @@ export default function TeacherDashboard() {
   const { toast } = useToast();
 
   // State initialization from localStorage or mock data
-  const [courses, setCourses] = useState<Course[]>(() => getFromLocalStorage('courses', initialCourses));
+  const [courses, setCourses] = useState<Course[]>(() => {
+    const savedCourses = getFromLocalStorage("courses", initialCourses);
+    // After parsing from JSON, Icon is not a valid component. We need to re-hydrate it.
+    return savedCourses.map((course: any) => {
+      let IconComponent = BookOpen; // Default for newly created courses
+      if (course.id === "math") {
+        IconComponent = Calculator;
+      } else if (course.id === "science") {
+        IconComponent = FlaskConical;
+      }
+      return { ...course, Icon: IconComponent };
+    });
+  });
   const [topics, setTopics] = useState<Topic[]>(() => getFromLocalStorage('topics', initialTopics));
   const [lessons, setLessons] = useState<Lesson[]>(() => getFromLocalStorage('lessons', initialLessons));
   const [assignments, setAssignments] = useState<DailyAssignment[]>(() => getFromLocalStorage('assignments', initialAssignments.map(a => ({...a, dueDate: new Date(a.dueDate)}))));
