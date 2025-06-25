@@ -115,6 +115,26 @@ export const mockLessons: Lesson[] = [
         image: "https://placehold.co/600x400.png",
         "data-ai-hint": "algebra expression"
       },
+      {
+        id: "q3",
+        text: "Which of the following is a 'variable'?",
+        type: 'multiple-choice',
+        options: ["x", "5", "=", "+"],
+        correctAnswer: "x",
+        hint: "A variable is a symbol that represents a quantity that can change.",
+        image: "https://placehold.co/600x400.png",
+        "data-ai-hint": "algebra variable"
+      },
+      {
+        id: "q4",
+        text: "What are 'like terms' in the expression: 5y + 2x - 3y?",
+        type: 'multiple-choice',
+        options: ["5y and 2x", "2x and -3y", "5y and -3y", "5y, 2x, and -3y"],
+        correctAnswer: "5y and -3y",
+        hint: "Like terms are terms that have the same variables raised to the same power.",
+        image: "https://placehold.co/600x400.png",
+        "data-ai-hint": "algebra terms"
+      },
     ],
   },
   {
@@ -132,6 +152,26 @@ export const mockLessons: Lesson[] = [
             hint: "The area of a rectangle is calculated by multiplying its width by its height.",
             image: "https://placehold.co/600x400.png",
             "data-ai-hint": "geometry rectangle"
+        },
+        {
+            id: "q2",
+            text: "What is the perimeter of a square with a side length of 7 units?",
+            type: "multiple-choice",
+            options: ["14 units", "28 units", "49 units", "21 units"],
+            correctAnswer: "28 units",
+            hint: "The perimeter is the total distance around the outside of a shape. A square has four equal sides.",
+            image: "https://placehold.co/600x400.png",
+            "data-ai-hint": "geometry square"
+        },
+        {
+            id: "q3",
+            text: "An angle that measures less than 90 degrees is called...",
+            type: "multiple-choice",
+            options: ["An obtuse angle", "A right angle", "A straight angle", "An acute angle"],
+            correctAnswer: "An acute angle",
+            hint: "Think 'acute little angle' for small angles.",
+            image: "https://placehold.co/600x400.png",
+            "data-ai-hint": "geometry angle"
         },
     ],
   },
@@ -152,6 +192,26 @@ export const mockLessons: Lesson[] = [
         image: "https://placehold.co/600x400.png",
         "data-ai-hint": "planet mars"
       },
+      {
+        id: "q2",
+        text: "What is the largest planet in our solar system?",
+        type: 'multiple-choice',
+        options: ["Earth", "Saturn", "Jupiter", "Neptune"],
+        correctAnswer: "Jupiter",
+        hint: "This gas giant is so big that all other planets in the solar system could fit inside it.",
+        image: "https://placehold.co/600x400.png",
+        "data-ai-hint": "planet jupiter"
+      },
+      {
+        id: "q3",
+        text: "Which planet is famous for its prominent rings?",
+        type: 'multiple-choice',
+        options: ["Uranus", "Mars", "Venus", "Saturn"],
+        correctAnswer: "Saturn",
+        hint: "These rings are made of chunks of ice and rock.",
+        image: "https://placehold.co/600x400.png",
+        "data-ai-hint": "planet saturn"
+      },
     ],
   },
   {
@@ -169,6 +229,26 @@ export const mockLessons: Lesson[] = [
         hint: "This organelle is responsible for generating most of the cell's supply of adenosine triphosphate (ATP).",
         image: "https://placehold.co/600x400.png",
         "data-ai-hint": "cell biology"
+      },
+      {
+        id: "q2",
+        text: "Which part of the cell contains its genetic material (DNA)?",
+        type: 'multiple-choice',
+        options: ["Cytoplasm", "Nucleus", "Vacuole", "Cell Membrane"],
+        correctAnswer: "Nucleus",
+        hint: "It's often called the 'control center' of the cell.",
+        image: "https://placehold.co/600x400.png",
+        "data-ai-hint": "cell nucleus"
+      },
+      {
+        id: "q3",
+        text: "What is the main function of the cell wall in plant cells?",
+        type: 'multiple-choice',
+        options: ["To produce energy", "To provide structural support and protection", "To control what enters and leaves the cell", "To store water"],
+        correctAnswer: "To provide structural support and protection",
+        hint: "This rigid outer layer is not found in animal cells.",
+        image: "https://placehold.co/600x400.png",
+        "data-ai-hint": "plant cell"
       },
     ],
   },
