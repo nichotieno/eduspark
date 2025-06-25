@@ -36,6 +36,7 @@ export type LessonStep = {
 export type Lesson = {
   id: string;
   courseId: string;
+  topic: string;
   title: string;
   xp: number;
   steps: LessonStep[];
@@ -101,6 +102,7 @@ export const mockLessons: Lesson[] = [
   {
     id: "m1",
     courseId: "math",
+    topic: "Algebra Foundations",
     title: "Introduction to Algebra",
     xp: 100,
     steps: [
@@ -148,6 +150,7 @@ export const mockLessons: Lesson[] = [
   {
     id: "m2",
     courseId: "math",
+    topic: "Geometric Principles",
     title: "Basics of Geometry",
     xp: 100,
     steps: [
@@ -204,6 +207,7 @@ export const mockLessons: Lesson[] = [
   {
     id: "s1",
     courseId: "science",
+    topic: "Our Cosmic Neighborhood",
     title: "The Solar System",
     xp: 100,
     steps: [
@@ -259,6 +263,7 @@ export const mockLessons: Lesson[] = [
   {
     id: "s2",
     courseId: "science",
+    topic: "The Cellular World",
     title: "Introduction to Cells",
     xp: 100,
     steps: [
