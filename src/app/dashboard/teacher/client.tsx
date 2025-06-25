@@ -22,7 +22,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  mockTeacherData,
   type Course,
   type Topic,
   type Lesson,
@@ -83,12 +82,20 @@ import {
 } from './actions';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+type StudentProgressData = {
+  studentId: string;
+  studentName: string;
+  avatarUrl?: string;
+  progress: number;
+  lastActive: string;
+};
 
 type TeacherDashboardClientProps = {
     initialCourses: Omit<Course, 'Icon'>[];
     initialTopics: Topic[];
     initialLessons: Lesson[];
     initialAssignments: DailyAssignment[];
+    initialStudents: StudentProgressData[];
 };
 
 type FormState = {
@@ -109,14 +116,15 @@ export function TeacherDashboardClient({
   initialTopics,
   initialLessons,
   initialAssignments,
+  initialStudents,
 }: TeacherDashboardClientProps) {
-  const classroom = mockTeacherData.classrooms[0];
   const { toast } = useToast();
 
   const courses = initialCourses;
   const topics = initialTopics;
   const lessons = initialLessons;
   const assignments = initialAssignments;
+  const students = initialStudents;
 
   // Dialog states
   const [isCourseDialogOpen, setIsCourseDialogOpen] = useState(false);
@@ -274,7 +282,7 @@ export function TeacherDashboardClient({
         <TabsContent value="students">
           <Card>
             <CardHeader>
-              <CardTitle>{classroom.name}</CardTitle>
+              <CardTitle>Student Progress</CardTitle>
               <CardDescription>
                 Overview of your students' progress.
               </CardDescription>
@@ -289,13 +297,13 @@ export function TeacherDashboardClient({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {classroom.students.map((student) => (
+                  {students.map((student) => (
                     <TableRow key={student.studentId}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-9 w-9">
                             <AvatarImage
-                              src="https://placehold.co/100x100.png"
+                              src={student.avatarUrl}
                               alt={student.studentName}
                               data-ai-hint="person"
                             />

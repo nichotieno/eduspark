@@ -1,21 +1,66 @@
 import { getDb } from '@/lib/db';
 import { TeacherDashboardClient } from './client';
 import type { Course, Topic, Lesson, DailyAssignment } from "@/lib/mock-data";
+import type { User } from '@/lib/definitions';
+import { formatDistanceToNow } from 'date-fns';
+
+type StudentProgress = {
+  studentId: string;
+  studentName: string;
+  avatarUrl?: string;
+  progress: number;
+  lastActive: string;
+};
 
 export default async function TeacherDashboard() {
   const db = await getDb();
 
-  let courses: Course[] = [];
-  let topics: Topic[] = [];
-  let lessons: Lesson[] = [];
-  let assignments: DailyAssignment[] = [];
-  
   try {
-    courses = await db.all('SELECT * FROM courses');
-    topics = await db.all('SELECT * FROM topics');
-    lessons = await db.all('SELECT * FROM lessons');
-    const assignmentsData = await db.all('SELECT * FROM assignments');
-    assignments = assignmentsData.map(a => ({...a, dueDate: new Date(a.dueDate)}));
+    const [courses, topics, lessons, assignmentsData, students] = await Promise.all([
+      db.all<Course[]>('SELECT * FROM courses'),
+      db.all<Topic[]>('SELECT * FROM topics'),
+      db.all<Lesson[]>('SELECT * FROM lessons'),
+      db.all('SELECT * FROM assignments'),
+      db.all<User[]>('SELECT id, name, avatarUrl FROM users WHERE role = "student"')
+    ]);
+    
+    const assignments = assignmentsData.map(a => ({...a, dueDate: new Date(a.dueDate)}));
+    const totalLessonsCount = lessons.length;
+
+    const studentProgressList: StudentProgress[] = await Promise.all(
+      students.map(async (student) => {
+        const progressResult = await db.get<{ count: number }>(
+          'SELECT COUNT(*) as count FROM user_progress WHERE userId = ?',
+          student.id
+        );
+        const completedLessons = progressResult?.count || 0;
+        const progress = totalLessonsCount > 0 ? Math.round((completedLessons / totalLessonsCount) * 100) : 0;
+
+        const lastStreakResult = await db.get<{ date: string }>(
+          'SELECT "date" FROM user_streaks WHERE userId = ? ORDER BY "date" DESC LIMIT 1',
+          student.id
+        );
+        const lastActive = lastStreakResult ? formatDistanceToNow(new Date(lastStreakResult.date), { addSuffix: true }) : 'Never';
+
+        return {
+          studentId: student.id,
+          studentName: student.name,
+          avatarUrl: student.avatarUrl,
+          progress,
+          lastActive,
+        };
+      })
+    );
+
+    return (
+      <TeacherDashboardClient
+        initialCourses={courses}
+        initialTopics={topics}
+        initialLessons={lessons}
+        initialAssignments={assignments}
+        initialStudents={studentProgressList}
+      />
+    );
 
   } catch (error) {
     console.error("Database query failed", error);
@@ -27,13 +72,4 @@ export default async function TeacherDashboard() {
         </div>
     )
   }
-
-  return (
-    <TeacherDashboardClient
-      initialCourses={courses}
-      initialTopics={topics}
-      initialLessons={lessons}
-      initialAssignments={assignments}
-    />
-  );
 }
