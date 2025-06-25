@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useState } from "react";
+import React, { useState, useActionState, useEffect, useMemo } from "react";
+import { useFormStatus } from "react-dom";
 import {
   Card,
   CardContent,
@@ -45,28 +46,39 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
   PlusCircle,
   Pencil,
   Trash2,
-  CalendarIcon,
   BookCopy,
   BookMarked,
   FilePenLine,
+  AlertCircle,
 } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import {
+  createCourse,
+  updateCourse,
+  createTopic,
+  updateTopic,
+  createLesson,
+  createAssignment,
+  updateAssignment,
+} from './actions';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 type TeacherDashboardClientProps = {
@@ -76,6 +88,18 @@ type TeacherDashboardClientProps = {
     initialAssignments: DailyAssignment[];
 };
 
+type FormState = {
+  message: string;
+  success: boolean;
+  errors?: Record<string, string[] | undefined>;
+};
+
+const initialFormState: FormState = { message: '', success: false, errors: {} };
+
+function SubmitButton({ children }: { children: React.ReactNode }) {
+    const { pending } = useFormStatus();
+    return <Button type="submit" disabled={pending} className="w-full sm:w-auto">{pending ? 'Saving...' : children}</Button>;
+}
 
 export function TeacherDashboardClient({
   initialCourses,
@@ -86,46 +110,80 @@ export function TeacherDashboardClient({
   const classroom = mockTeacherData.classrooms[0];
   const { toast } = useToast();
 
-  const [courses, setCourses] = useState<Course[]>(initialCourses);
-  const [topics, setTopics] = useState<Topic[]>(initialTopics);
-  const [lessons, setLessons] = useState<Lesson[]>(initialLessons);
-  const [assignments, setAssignments] = useState<DailyAssignment[]>(initialAssignments);
-
+  const courses = initialCourses;
+  const topics = initialTopics;
+  const lessons = initialLessons;
+  const assignments = initialAssignments;
 
   // Dialog states
   const [isCourseDialogOpen, setIsCourseDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
-  const [courseTitle, setCourseTitle] = useState("");
-  const [courseDescription, setCourseDescription] = useState("");
 
   const [isTopicDialogOpen, setIsTopicDialogOpen] = useState(false);
   const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
-  const [topicTitle, setTopicTitle] = useState("");
   const [currentCourseIdForTopic, setCurrentCourseIdForTopic] = useState<string | null>(null);
 
   const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false);
-  const [lessonTitle, setLessonTitle] = useState("");
-  const [lessonXp, setLessonXp] = useState(100);
-  const [currentTopicIdForLesson, setCurrentTopicIdForLesson] = useState<string | null>(null);
+  const [currentTopicId, setCurrentTopicId] = useState<string | null>(null);
 
   const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<DailyAssignment | null>(null);
-  const [assignmentTitle, setAssignmentTitle] = useState("");
-  const [assignmentProblem, setAssignmentProblem] = useState("");
-  const [assignmentDueDate, setAssignmentDueDate] = useState<Date | undefined>();
+
+  // Action states
+  const [courseFormState, courseFormAction] = useActionState(
+      editingCourse ? updateCourse.bind(null, editingCourse.id) : createCourse,
+      initialFormState
+  );
+  const [topicFormState, topicFormAction] = useActionState(
+      editingTopic ? updateTopic.bind(null, editingTopic.id) : createTopic.bind(null, currentCourseIdForTopic!),
+      initialFormState
+  );
+  const [lessonFormState, lessonFormAction] = useActionState(
+    currentTopicId ? createLesson.bind(null, currentTopicId) : (_: any, fd: FormData) => fd,
+    initialFormState
+  );
+  const [assignmentFormState, assignmentFormAction] = useActionState(
+    editingAssignment ? updateAssignment.bind(null, editingAssignment.id) : createAssignment,
+    initialFormState
+  );
+
+  // Effects to close dialogs on success
+  useEffect(() => {
+    if (courseFormState.success) {
+      toast({ title: "Success!", description: courseFormState.message });
+      setIsCourseDialogOpen(false);
+    }
+  }, [courseFormState, toast]);
+
+  useEffect(() => {
+    if (topicFormState.success) {
+      toast({ title: "Success!", description: topicFormState.message });
+      setIsTopicDialogOpen(false);
+    }
+  }, [topicFormState, toast]);
+  
+  useEffect(() => {
+    // Redirect is handled by server action, so we just close the dialog
+    if (lessonFormState.success) {
+      setIsLessonDialogOpen(false);
+    }
+  }, [lessonFormState]);
+
+  useEffect(() => {
+    if (assignmentFormState.success) {
+      toast({ title: "Success!", description: assignmentFormState.message });
+      setIsAssignmentDialogOpen(false);
+    }
+  }, [assignmentFormState, toast]);
 
   // Course Handlers
   const handleCreateNewCourse = () => {
     setEditingCourse(null);
-    setCourseTitle("");
-    setCourseDescription("");
     setIsCourseDialogOpen(true);
   };
 
   const handleEditCourse = (course: Course) => {
     setEditingCourse(course);
-    setCourseTitle(course.title);
-    setCourseDescription(course.description);
     setIsCourseDialogOpen(true);
   };
 
@@ -133,30 +191,19 @@ export function TeacherDashboardClient({
      toast({
         variant: 'destructive',
         title: "Action Disabled",
-        description: "Database modifications are not yet implemented.",
-    });
-  };
-
-  const handleCourseFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-        variant: 'destructive',
-        title: "Action Disabled",
-        description: "Database modifications are not yet implemented.",
+        description: "Delete functionality is not yet implemented.",
     });
   };
 
   // Topic Handlers
   const handleCreateNewTopic = (courseId: string) => {
     setEditingTopic(null);
-    setTopicTitle("");
     setCurrentCourseIdForTopic(courseId);
     setIsTopicDialogOpen(true);
   };
 
   const handleEditTopic = (topic: Topic) => {
     setEditingTopic(topic);
-    setTopicTitle(topic.title);
     setCurrentCourseIdForTopic(topic.courseId);
     setIsTopicDialogOpen(true);
   };
@@ -165,24 +212,13 @@ export function TeacherDashboardClient({
     toast({
         variant: 'destructive',
         title: "Action Disabled",
-        description: "Database modifications are not yet implemented.",
-    });
-  };
-
-  const handleTopicFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-        variant: 'destructive',
-        title: "Action Disabled",
-        description: "Database modifications are not yet implemented.",
+        description: "Delete functionality is not yet implemented.",
     });
   };
 
   // Lesson Handlers
   const handleCreateNewLesson = (topicId: string) => {
-    setLessonTitle("");
-    setLessonXp(100);
-    setCurrentTopicIdForLesson(topicId);
+    setCurrentTopicId(topicId);
     setIsLessonDialogOpen(true);
   };
 
@@ -194,29 +230,14 @@ export function TeacherDashboardClient({
     });
   };
 
-  const handleLessonFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-        variant: 'destructive',
-        title: "Action Disabled",
-        description: "Database modifications are not yet implemented.",
-    });
-  };
-
   // Assignment Handlers
   const handleCreateNewAssignment = () => {
     setEditingAssignment(null);
-    setAssignmentTitle("");
-    setAssignmentProblem("");
-    setAssignmentDueDate(undefined);
     setIsAssignmentDialogOpen(true);
   };
 
   const handleEditAssignment = (assignment: DailyAssignment) => {
     setEditingAssignment(assignment);
-    setAssignmentTitle(assignment.title);
-    setAssignmentProblem(assignment.problem);
-    setAssignmentDueDate(new Date(assignment.dueDate));
     setIsAssignmentDialogOpen(true);
   };
 
@@ -228,14 +249,9 @@ export function TeacherDashboardClient({
     });
   };
 
-  const handleAssignmentFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-        variant: 'destructive',
-        title: "Action Disabled",
-        description: "Database modifications are not yet implemented.",
-    });
-  };
+  const assignmentKey = useMemo(() => editingAssignment?.id || 'new-assignment', [editingAssignment]);
+  const courseKey = useMemo(() => editingCourse?.id || 'new-course', [editingCourse]);
+  const topicKey = useMemo(() => editingTopic?.id || 'new-topic', [editingTopic]);
 
   return (
     <div>
@@ -527,32 +543,33 @@ export function TeacherDashboardClient({
                 : "Fill in the details for your new course."}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleCourseFormSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="title" className="text-right">
-                  Title
-                </Label>
-                <Input
-                  id="title"
-                  value={courseTitle}
-                  onChange={(e) => setCourseTitle(e.target.value)}
-                  className="col-span-3"
-                  placeholder="e.g., Introduction to Physics"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="description" className="text-right">
-                  Description
-                </Label>
-                <Textarea
-                  id="description"
-                  value={courseDescription}
-                  onChange={(e) => setCourseDescription(e.target.value)}
-                  className="col-span-3"
-                  placeholder="A brief summary of the course."
-                />
-              </div>
+          <form key={courseKey} action={courseFormAction} className="space-y-4">
+            {!courseFormState.success && courseFormState.message && !courseFormState.errors && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{courseFormState.message}</AlertDescription>
+                </Alert>
+              )}
+            <div>
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                name="title"
+                defaultValue={editingCourse?.title}
+                placeholder="e.g., Introduction to Physics"
+              />
+               {courseFormState.errors?.title && <p className="text-sm text-destructive mt-1">{courseFormState.errors.title[0]}</p>}
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                defaultValue={editingCourse?.description}
+                placeholder="A brief summary of the course."
+              />
+              {courseFormState.errors?.description && <p className="text-sm text-destructive mt-1">{courseFormState.errors.description[0]}</p>}
             </div>
             <DialogFooter>
               <DialogClose asChild>
@@ -560,9 +577,7 @@ export function TeacherDashboardClient({
                   Cancel
                 </Button>
               </DialogClose>
-              <Button type="submit">
-                {editingCourse ? "Save Changes" : "Create Course"}
-              </Button>
+              <SubmitButton>{editingCourse ? "Save Changes" : "Create Course"}</SubmitButton>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -581,20 +596,23 @@ export function TeacherDashboardClient({
                 : "Enter the title for the new topic."}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleTopicFormSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="topic-title" className="text-right">
-                  Title
-                </Label>
-                <Input
-                  id="topic-title"
-                  value={topicTitle}
-                  onChange={(e) => setTopicTitle(e.target.value)}
-                  className="col-span-3"
-                  placeholder="e.g., Kinematics"
-                />
-              </div>
+          <form key={topicKey} action={topicFormAction} className="space-y-4">
+             {!topicFormState.success && topicFormState.message && !topicFormState.errors &&(
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{topicFormState.message}</AlertDescription>
+                </Alert>
+              )}
+            <div>
+              <Label htmlFor="topic-title">Title</Label>
+              <Input
+                id="topic-title"
+                name="title"
+                defaultValue={editingTopic?.title}
+                placeholder="e.g., Kinematics"
+              />
+              {topicFormState.errors?.title && <p className="text-sm text-destructive mt-1">{topicFormState.errors.title[0]}</p>}
             </div>
             <DialogFooter>
               <DialogClose asChild>
@@ -602,9 +620,7 @@ export function TeacherDashboardClient({
                   Cancel
                 </Button>
               </DialogClose>
-              <Button type="submit">
-                {editingTopic ? "Save Changes" : "Create Topic"}
-              </Button>
+              <SubmitButton>{editingTopic ? "Save Changes" : "Create Topic"}</SubmitButton>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -619,32 +635,32 @@ export function TeacherDashboardClient({
              Fill in the details for your new lesson. You can add content after creation.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleLessonFormSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="lesson-title" className="text-right">
-                  Title
-                </Label>
-                <Input
-                  id="lesson-title"
-                  value={lessonTitle}
-                  onChange={(e) => setLessonTitle(e.target.value)}
-                  className="col-span-3"
-                  placeholder="e.g., Introduction to Variables"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="lesson-xp" className="text-right">
-                  XP Value
-                </Label>
-                <Input
-                  id="lesson-xp"
-                  type="number"
-                  value={lessonXp}
-                  onChange={(e) => setLessonXp(parseInt(e.target.value, 10))}
-                  className="col-span-3"
-                />
-              </div>
+          <form action={lessonFormAction} className="space-y-4">
+            {!lessonFormState.success && lessonFormState.message && !lessonFormState.errors &&(
+                  <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>Error</AlertTitle>
+                      <AlertDescription>{lessonFormState.message}</AlertDescription>
+                  </Alert>
+              )}
+            <div>
+              <Label htmlFor="lesson-title">Title</Label>
+              <Input
+                id="lesson-title"
+                name="title"
+                placeholder="e.g., Introduction to Variables"
+              />
+               {lessonFormState.errors?.title && <p className="text-sm text-destructive mt-1">{lessonFormState.errors.title[0]}</p>}
+            </div>
+            <div>
+              <Label htmlFor="lesson-xp">XP Value</Label>
+              <Input
+                id="lesson-xp"
+                name="xp"
+                type="number"
+                defaultValue={100}
+              />
+              {lessonFormState.errors?.xp && <p className="text-sm text-destructive mt-1">{lessonFormState.errors.xp[0]}</p>}
             </div>
             <DialogFooter>
               <DialogClose asChild>
@@ -652,9 +668,7 @@ export function TeacherDashboardClient({
                   Cancel
                 </Button>
               </DialogClose>
-              <Button type="submit">
-                Create Lesson
-              </Button>
+              <SubmitButton>Create & Edit Lesson</SubmitButton>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -676,63 +690,58 @@ export function TeacherDashboardClient({
                 : "Fill in the details for your new assignment."}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleAssignmentFormSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="assignment-title" className="text-right">
-                  Title
-                </Label>
-                <Input
-                  id="assignment-title"
-                  value={assignmentTitle}
-                  onChange={(e) => setAssignmentTitle(e.target.value)}
-                  className="col-span-3"
-                  placeholder="e.g., Solving Equations"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="assignment-problem" className="pt-2 text-right">
-                  Problem
-                </Label>
-                <Textarea
-                  id="assignment-problem"
-                  value={assignmentProblem}
-                  onChange={(e) => setAssignmentProblem(e.target.value)}
-                  className="col-span-3"
-                  placeholder="Describe the assignment problem..."
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="assignment-due-date" className="text-right">
-                  Due Date
-                </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "col-span-3 justify-start text-left font-normal",
-                        !assignmentDueDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {assignmentDueDate ? (
-                        format(assignmentDueDate, "PPP")
-                      ) : (
-                        <span>Pick a due date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={assignmentDueDate}
-                      onSelect={setAssignmentDueDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+          <form key={assignmentKey} action={assignmentFormAction} className="space-y-4">
+            {!assignmentFormState.success && assignmentFormState.message && !assignmentFormState.errors && (
+                  <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>Error</AlertTitle>
+                      <AlertDescription>{assignmentFormState.message}</AlertDescription>
+                  </Alert>
+              )}
+            <div>
+              <Label htmlFor="assignment-title">Title</Label>
+              <Input
+                id="assignment-title"
+                name="title"
+                defaultValue={editingAssignment?.title}
+                placeholder="e.g., Solving Equations"
+              />
+               {assignmentFormState.errors?.title && <p className="text-sm text-destructive mt-1">{assignmentFormState.errors.title[0]}</p>}
+            </div>
+            <div>
+              <Label htmlFor="assignment-problem">Problem</Label>
+              <Textarea
+                id="assignment-problem"
+                name="problem"
+                defaultValue={editingAssignment?.problem}
+                placeholder="Describe the assignment problem..."
+              />
+              {assignmentFormState.errors?.problem && <p className="text-sm text-destructive mt-1">{assignmentFormState.errors.problem[0]}</p>}
+            </div>
+            <div>
+                <Label htmlFor="assignment-course">Course</Label>
+                <Select name="courseId" defaultValue={editingAssignment?.courseId}>
+                  <SelectTrigger id="assignment-course">
+                    <SelectValue placeholder="Select a course" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses.map(course => (
+                      <SelectItem key={course.id} value={course.id}>{course.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                 {assignmentFormState.errors?.courseId && <p className="text-sm text-destructive mt-1">{assignmentFormState.errors.courseId[0]}</p>}
+            </div>
+            <div>
+              <Label htmlFor="assignment-due-date">Due Date</Label>
+              <Input 
+                type="date"
+                name="dueDate"
+                id="assignment-due-date"
+                defaultValue={editingAssignment?.dueDate ? format(new Date(editingAssignment.dueDate), 'yyyy-MM-dd') : ''}
+                className="w-full"
+              />
+               {assignmentFormState.errors?.dueDate && <p className="text-sm text-destructive mt-1">{assignmentFormState.errors.dueDate[0]}</p>}
             </div>
             <DialogFooter>
               <DialogClose asChild>
@@ -740,9 +749,7 @@ export function TeacherDashboardClient({
                   Cancel
                 </Button>
               </DialogClose>
-              <Button type="submit">
-                {editingAssignment ? "Save Changes" : "Create Assignment"}
-              </Button>
+              <SubmitButton>{editingAssignment ? "Save Changes" : "Create Assignment"}</SubmitButton>
             </DialogFooter>
           </form>
         </DialogContent>
