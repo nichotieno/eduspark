@@ -3,6 +3,7 @@ import { TeacherDashboardClient } from './client';
 import type { Course, Topic, Lesson, DailyAssignment, RecentSubmission, CourseEnrollment } from "@/lib/mock-data";
 import type { User } from '@/lib/definitions';
 import { formatDistanceToNow } from 'date-fns';
+import { generateClassroomInsights } from '@/ai/flows/generate-classroom-insights-flow';
 
 type StudentProgress = {
   studentId: string;
@@ -16,7 +17,7 @@ export default async function TeacherDashboard() {
   const db = await getDb();
 
   try {
-    const [courses, topics, lessons, assignmentsData, students, courseEnrollmentsData, recentSubmissionsData] = await Promise.all([
+    const [courses, topics, lessons, assignmentsData, students, courseEnrollmentsData, recentSubmissionsData, aiInsights] = await Promise.all([
       db.all<Omit<Course, 'Icon'>[]>('SELECT * FROM courses'),
       db.all<Topic[]>('SELECT * FROM topics'),
       db.all<Lesson[]>('SELECT * FROM lessons'),
@@ -44,7 +45,11 @@ export default async function TeacherDashboard() {
           JOIN assignments a ON s.assignmentId = a.id
           ORDER BY s.submittedAt DESC
           LIMIT 5
-      `)
+      `),
+      generateClassroomInsights().catch(err => {
+          console.error("AI Insight generation failed:", err);
+          return null; // Gracefully handle AI errors
+      })
     ]);
     
     const assignments = assignmentsData.map(a => ({...a, dueDate: new Date(a.dueDate)}));
@@ -91,6 +96,7 @@ export default async function TeacherDashboard() {
             courseEnrollments: courseEnrollmentsData,
             recentSubmissions: recentSubmissionsData,
         }}
+        aiInsights={aiInsights}
       />
     );
 

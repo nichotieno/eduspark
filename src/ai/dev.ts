@@ -3,3 +3,4 @@
 import './flows/get-tutor-hint-flow.js';
 import './flows/generate-personalized-challenge-flow.js';
 import './flows/generate-lesson-content-flow.js';
+import './flows/generate-classroom-insights-flow.js';

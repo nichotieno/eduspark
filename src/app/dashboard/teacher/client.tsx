@@ -71,6 +71,7 @@ import {
   BookOpen,
   Users,
   Activity,
+  Bot,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -87,6 +88,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { type GenerateClassroomInsightsOutput } from "@/ai/flows/generate-classroom-insights-flow";
 
 type StudentProgressData = {
   studentId: string;
@@ -110,6 +112,7 @@ type TeacherDashboardClientProps = {
     initialAssignments: DailyAssignment[];
     initialStudents: StudentProgressData[];
     analytics: AnalyticsData;
+    aiInsights: GenerateClassroomInsightsOutput | null;
 };
 
 type FormState = {
@@ -139,6 +142,7 @@ export function TeacherDashboardClient({
   initialAssignments,
   initialStudents,
   analytics,
+  aiInsights,
 }: TeacherDashboardClientProps) {
   const { toast } = useToast();
 
@@ -323,6 +327,28 @@ export function TeacherDashboardClient({
                     </CardContent>
                 </Card>
             </div>
+
+            {aiInsights && aiInsights.insights.length > 0 && (
+                <Card className="mt-4">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Bot className="h-6 w-6 text-primary" />
+                            AI Teaching Assistant
+                        </CardTitle>
+                        <CardDescription>
+                            Here are some insights about your classroom activity.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ul className="space-y-2 list-disc pl-5 text-muted-foreground">
+                            {aiInsights.insights.map((insight, index) => (
+                                <li key={index}>{insight}</li>
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
+            )}
+
              <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-7">
                 <Card className="lg:col-span-4">
                   <CardHeader>
