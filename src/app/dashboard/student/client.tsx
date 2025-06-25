@@ -2,7 +2,6 @@
 "use client";
 
 import {
-  mockBadges,
   type DailyAssignment,
   type Course,
   type Lesson,
@@ -15,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Flame, Medal, Sparkles, Clock, ChevronRight } from "lucide-react";
+import { Flame, Medal, Sparkles, Clock, ChevronRight, BookOpen, Calculator, FlaskConical } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from 'date-fns';
 import { type SessionPayload } from "@/lib/session";
@@ -27,7 +26,7 @@ type StudentDashboardClientProps = {
         dayStreak: number;
         badgesEarned: number;
     };
-    courses: Course[];
+    courses: Omit<Course, 'Icon'>[];
     lessons: Lesson[];
     assignments: DailyAssignment[];
 };
@@ -57,25 +56,28 @@ const StatCard = ({
 const CourseCard = ({
   course,
 }: {
-  course: Course,
-}) => (
-  <Card>
-    <CardHeader>
-        <div className="mb-4 flex justify-center">
-            <div className="rounded-full bg-primary/10 p-4">
-                <course.Icon className="h-8 w-8 text-primary" />
-            </div>
-        </div>
-      <CardTitle className="text-center font-headline">{course.title}</CardTitle>
-    </CardHeader>
-    <CardContent className="flex flex-col items-center text-center">
-      <p className="mb-4 text-sm text-muted-foreground">{course.description}</p>
-      <Button asChild className="mt-auto">
-        <Link href={`/courses/${course.id}`}>View Course</Link>
-      </Button>
-    </CardContent>
-  </Card>
-);
+  course: Omit<Course, 'Icon'>,
+}) => {
+  const Icon = course.id === "math" ? Calculator : course.id === "science" ? FlaskConical : BookOpen;
+  return (
+    <Card>
+      <CardHeader>
+          <div className="mb-4 flex justify-center">
+              <div className="rounded-full bg-primary/10 p-4">
+                  <Icon className="h-8 w-8 text-primary" />
+              </div>
+          </div>
+        <CardTitle className="text-center font-headline">{course.title}</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center text-center">
+        <p className="mb-4 text-sm text-muted-foreground">{course.description}</p>
+        <Button asChild className="mt-auto">
+          <Link href={`/courses/${course.id}`}>View Course</Link>
+        </Button>
+      </CardContent>
+    </Card>
+  )
+};
 
 export function StudentDashboardClient({
     user,
@@ -85,7 +87,7 @@ export function StudentDashboardClient({
     assignments,
 }: StudentDashboardClientProps) {
 
-  const userBadges = mockBadges.slice(0, 3); // This can be made dynamic later
+  const userBadges = stats.badgesEarned > 0 ? [{ id: 'b1', name: 'Math Beginner', Icon: Medal }] : [];
   const firstLesson = lessons.length > 0 ? lessons[0] : null;
   const firstCourse = firstLesson ? courses.find(c => c.id === firstLesson.courseId) : null;
   const activeAssignments = assignments;

@@ -7,7 +7,6 @@ import {
   type DailyAssignment,
   type Lesson,
 } from "@/lib/mock-data";
-import { BookOpen, Calculator, FlaskConical } from "lucide-react";
 import { StudentDashboardClient } from "./client";
 
 
@@ -85,19 +84,11 @@ export default async function StudentDashboardPage() {
     dueDate: new Date(a.dueDate),
   }));
 
-  // Re-hydrate Icon components
-  const coursesWithIcons = courses.map((c: any) => {
-    let IconComponent = BookOpen;
-    if (c.id === "math") IconComponent = Calculator;
-    else if (c.id === "science") IconComponent = FlaskConical;
-    return { ...c, Icon: IconComponent };
-  });
-
   return (
     <StudentDashboardClient
       user={session}
       stats={{ totalXp, dayStreak, badgesEarned }}
-      courses={coursesWithIcons}
+      courses={courses}
       lessons={lessons}
       assignments={assignments}
     />

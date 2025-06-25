@@ -7,7 +7,6 @@ import {
   type Topic,
 } from "@/lib/mock-data";
 import { notFound, redirect } from "next/navigation";
-import { BookOpen, Calculator, FlaskConical } from "lucide-react";
 import { CoursePageClient } from "./client";
 
 async function getCourseData(courseId: string, userId: string) {
@@ -16,12 +15,6 @@ async function getCourseData(courseId: string, userId: string) {
     // Fetch course details
     const course = await db.get<Course>('SELECT * FROM courses WHERE id = ?', courseId);
     if (!course) return null;
-
-    // Add Icon component
-    let IconComponent = BookOpen;
-    if (course.id === "math") IconComponent = Calculator;
-    else if (course.id === "science") IconComponent = FlaskConical;
-    const courseWithIcon = { ...course, Icon: IconComponent };
 
     // Fetch related data in parallel
     const [topics, lessons, userProgress] = await Promise.all([
@@ -37,7 +30,7 @@ async function getCourseData(courseId: string, userId: string) {
     }, {} as Record<string, boolean>);
     
     return {
-        course: courseWithIcon,
+        course,
         topics,
         lessons,
         completedLessons,

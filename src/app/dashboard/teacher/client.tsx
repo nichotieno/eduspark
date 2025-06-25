@@ -65,6 +65,9 @@ import {
   BookMarked,
   FilePenLine,
   AlertCircle,
+  Calculator,
+  FlaskConical,
+  BookOpen,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -82,7 +85,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 type TeacherDashboardClientProps = {
-    initialCourses: Course[];
+    initialCourses: Omit<Course, 'Icon'>[];
     initialTopics: Topic[];
     initialLessons: Lesson[];
     initialAssignments: DailyAssignment[];
@@ -117,7 +120,7 @@ export function TeacherDashboardClient({
 
   // Dialog states
   const [isCourseDialogOpen, setIsCourseDialogOpen] = useState(false);
-  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [editingCourse, setEditingCourse] = useState<Omit<Course, 'Icon'> | null>(null);
 
   const [isTopicDialogOpen, setIsTopicDialogOpen] = useState(false);
   const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
@@ -182,7 +185,7 @@ export function TeacherDashboardClient({
     setIsCourseDialogOpen(true);
   };
 
-  const handleEditCourse = (course: Course) => {
+  const handleEditCourse = (course: Omit<Course, 'Icon'>) => {
     setEditingCourse(course);
     setIsCourseDialogOpen(true);
   };
@@ -340,14 +343,16 @@ export function TeacherDashboardClient({
             </CardHeader>
             <CardContent>
                <Accordion type="single" collapsible className="w-full">
-                {courses.map((course) => (
+                {courses.map((course) => {
+                  const Icon = course.id === "math" ? Calculator : course.id === "science" ? FlaskConical : BookOpen;
+                  return (
                     <AccordionItem value={course.id} key={course.id}>
                         <Card className="mb-2 border-0 shadow-none">
                              <div className="flex items-center p-4">
                                 <AccordionTrigger className="flex-1 hover:no-underline">
                                     <div className="flex items-center gap-4">
                                         <div className="rounded-full bg-primary/10 p-3">
-                                            <course.Icon className="h-6 w-6 text-primary" />
+                                            <Icon className="h-6 w-6 text-primary" />
                                         </div>
                                         <div>
                                             <p className="font-semibold text-left">{course.title}</p>
@@ -453,7 +458,8 @@ export function TeacherDashboardClient({
                             </div>
                         </AccordionContent>
                     </AccordionItem>
-                ))}
+                  )
+                })}
               </Accordion>
             </CardContent>
           </Card>

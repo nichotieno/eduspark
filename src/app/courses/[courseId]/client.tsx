@@ -17,11 +17,14 @@ import {
   ChevronLeft,
   Lock,
   MapPin,
+  Calculator,
+  FlaskConical,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type CoursePageClientProps = {
-  course: Course & { Icon: React.ElementType };
+  course: Omit<Course, 'Icon'>;
   topics: Topic[];
   lessons: Lesson[];
   completedLessons: Record<string, boolean>;
@@ -33,6 +36,12 @@ export function CoursePageClient({
   lessons,
   completedLessons,
 }: CoursePageClientProps) {
+  const Icon =
+    course.id === "math"
+      ? Calculator
+      : course.id === "science"
+      ? FlaskConical
+      : BookOpen;
     
   const isLessonUnlocked = (lessonId: string): boolean => {
     const lessonIndex = lessons.findIndex((l) => l.id === lessonId);
@@ -53,7 +62,7 @@ export function CoursePageClient({
 
       <div className="mb-8 flex items-center gap-4">
         <div className="rounded-full bg-primary/10 p-4">
-          <course.Icon className="h-10 w-10 text-primary" />
+          <Icon className="h-10 w-10 text-primary" />
         </div>
         <div>
           <h1 className="font-headline text-4xl font-bold">{course.title}</h1>
