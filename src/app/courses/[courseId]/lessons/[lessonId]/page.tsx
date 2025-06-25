@@ -49,6 +49,11 @@ export default function LessonPage() {
       setFeedback("incorrect");
     }
   };
+  
+  const tryAgain = () => {
+    setSelectedAnswer(null);
+    setFeedback(null);
+  }
 
   const nextQuestion = () => {
     if (currentQuestionIndex < lesson.questions.length - 1) {
@@ -62,6 +67,10 @@ export default function LessonPage() {
   };
 
   if (lessonComplete) {
+    const courseLessons = mockLessons.filter(l => l.courseId === lesson.courseId);
+    const currentLessonIndex = courseLessons.findIndex(l => l.id === lesson.id);
+    const nextLesson = currentLessonIndex !== -1 && currentLessonIndex < courseLessons.length - 1 ? courseLessons[currentLessonIndex + 1] : null;
+
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
             <Card className="w-full max-w-md text-center shadow-2xl animate-in fade-in-50 zoom-in-90">
@@ -76,9 +85,15 @@ export default function LessonPage() {
                     <p className="text-muted-foreground">Great job on finishing "{lesson.title}". Keep up the momentum!</p>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-2">
-                    <Button className="w-full" asChild>
-                        <Link href={`/courses/${lesson.courseId}`}>Next Lesson</Link>
-                    </Button>
+                    {nextLesson ? (
+                        <Button className="w-full" asChild>
+                            <Link href={`/courses/${nextLesson.courseId}/lessons/${nextLesson.id}`}>Next Lesson</Link>
+                        </Button>
+                    ) : (
+                        <Button className="w-full" asChild>
+                            <Link href={`/courses/${lesson.courseId}`}>Back to Course</Link>
+                        </Button>
+                    )}
                     <Button variant="outline" className="w-full" asChild>
                          <Link href="/dashboard/student">Back to Dashboard</Link>
                     </Button>
@@ -157,7 +172,7 @@ export default function LessonPage() {
                   {feedback === 'correct' ? <Check className="h-4 w-4"/> : <X className="h-4 w-4"/>}
                   <AlertTitle>{feedback === "correct" ? "Correct!" : "Not quite!"}</AlertTitle>
                   <AlertDescription>
-                    {feedback === "correct" ? "Great job!" : "Give it another thought or use a hint."}
+                    {feedback === "correct" ? "Great job!" : "That's not the right answer. Give it another try!"}
                   </AlertDescription>
                 </Alert>
              )}
@@ -170,8 +185,10 @@ export default function LessonPage() {
                 <Lightbulb className="mr-2 h-4 w-4" />
                 Hint
               </Button>
-              {feedback ? (
+              {feedback === 'correct' ? (
                  <Button onClick={nextQuestion}>Continue</Button>
+              ) : feedback === 'incorrect' ? (
+                <Button onClick={tryAgain}>Try Again</Button>
               ) : (
                 <Button onClick={checkAnswer} disabled={!selectedAnswer}>Check Answer</Button>
               )}

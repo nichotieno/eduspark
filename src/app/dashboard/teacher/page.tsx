@@ -49,8 +49,9 @@ export default function TeacherDashboard() {
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9">
                         <AvatarImage
-                          src={`https://placehold.co/100x100.png?text=${student.studentName[0]}`}
+                          src="https://placehold.co/100x100.png"
                           alt={student.studentName}
+                          data-ai-hint="person"
                         />
                         <AvatarFallback>{student.studentName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                       </Avatar>

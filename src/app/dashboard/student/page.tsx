@@ -2,6 +2,7 @@ import {
   mockUser,
   mockCourses,
   mockBadges,
+  mockLessons,
 } from "@/lib/mock-data";
 import {
   Card,
@@ -11,8 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Flame, Medal, Sparkles, Star } from "lucide-react";
+import { Flame, Medal, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 const StatCard = ({
@@ -67,6 +67,8 @@ const CourseCard = ({
 
 export default function StudentDashboard() {
   const userBadges = mockBadges.slice(0, mockUser.stats.badges);
+  const firstLesson = mockLessons[0];
+  const firstCourse = mockCourses.find(c => c.id === firstLesson.courseId);
 
   return (
     <div className="container mx-auto py-8">
@@ -113,25 +115,28 @@ export default function StudentDashboard() {
         <div className="space-y-8">
             <div>
                 <h2 className="mb-4 font-headline text-2xl font-bold">Continue Learning</h2>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Introduction to Algebra</CardTitle>
-                        <CardDescription>Core Math</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Progress value={45} className="mb-2" />
-                        <p className="text-sm text-muted-foreground mb-4">45% complete</p>
-                        <Button className="w-full">
-                            Jump Back In
-                        </Button>
-                    </CardContent>
-                </Card>
+                 {firstLesson && firstCourse && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>{firstLesson.title}</CardTitle>
+                            <CardDescription>{firstCourse.title}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground mb-4">You're doing great, keep it up!</p>
+                            <Button className="w-full" asChild>
+                                <Link href={`/courses/${firstLesson.courseId}/lessons/${firstLesson.id}`}>
+                                    Jump Back In
+                                </Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
             <div>
             <h2 className="mb-4 font-headline text-2xl font-bold">My Badges</h2>
             <Card>
                 <CardContent className="pt-6">
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-wrap justify-center gap-4">
                     {userBadges.map((badge) => (
                     <div key={badge.id} className="flex flex-col items-center text-center">
                         <div className="rounded-full border-2 border-accent p-3 bg-accent/10">

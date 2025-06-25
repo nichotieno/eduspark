@@ -41,6 +41,7 @@ export type Question = {
   correctAnswer: string;
   hint: string;
   image?: string;
+  "data-ai-hint"?: string;
 };
 
 export type StudentProgress = {
@@ -111,6 +112,8 @@ export const mockLessons: Lesson[] = [
         options: ["3x + 10", "3x + 12", "x + 10", "3x + 2"],
         correctAnswer: "3x + 10",
         hint: "Use the distributive property to multiply 3 by both x and 4.",
+        image: "https://placehold.co/600x400.png",
+        "data-ai-hint": "algebra expression"
       },
     ],
   },
@@ -127,6 +130,8 @@ export const mockLessons: Lesson[] = [
             options: ["13 units²", "40 units²", "26 units²", "30 units²"],
             correctAnswer: "40 units²",
             hint: "The area of a rectangle is calculated by multiplying its width by its height.",
+            image: "https://placehold.co/600x400.png",
+            "data-ai-hint": "geometry rectangle"
         },
     ],
   },
@@ -162,6 +167,8 @@ export const mockLessons: Lesson[] = [
         options: ["Nucleus", "Ribosome", "Mitochondria", "Cell Wall"],
         correctAnswer: "Mitochondria",
         hint: "This organelle is responsible for generating most of the cell's supply of adenosine triphosphate (ATP).",
+        image: "https://placehold.co/600x400.png",
+        "data-ai-hint": "cell biology"
       },
     ],
   },
