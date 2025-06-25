@@ -13,10 +13,16 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { type DailyChallenge, type ChallengeComment } from "@/lib/mock-data";
+import { type DailyChallenge, type ChallengeComment, type ChallengeCommunitySubmission } from "@/lib/mock-data";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { type SessionPayload } from "@/lib/session";
 import { postComment, submitSolution } from './actions';
@@ -28,6 +34,7 @@ type DailyChallengePageClientProps = {
     challenge: DailyChallenge;
     initialComments: ChallengeComment[];
     hasSubmitted: boolean;
+    communitySubmissions: ChallengeCommunitySubmission[];
     session: SessionPayload;
 }
 
@@ -44,7 +51,7 @@ function SolutionSubmitButton() {
 }
 
 
-export function DailyChallengePageClient({ challenge, initialComments, hasSubmitted, session }: DailyChallengePageClientProps) {
+export function DailyChallengePageClient({ challenge, initialComments, hasSubmitted, communitySubmissions, session }: DailyChallengePageClientProps) {
   const [solution, setSolution] = useState("");
   const [comment, setComment] = useState("");
   const { toast } = useToast();
@@ -97,6 +104,45 @@ export function DailyChallengePageClient({ challenge, initialComments, hasSubmit
               </p>
             </CardContent>
           </Card>
+
+          {solutionSubmitted && communitySubmissions.length > 0 && (
+             <Card className="mt-8">
+                <CardHeader>
+                  <CardTitle>Community Solutions</CardTitle>
+                  <CardDescription>
+                    See how other students approached the problem.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                   <Accordion type="multiple" className="w-full space-y-2">
+                    {communitySubmissions.map((sub) => (
+                      <AccordionItem value={sub.id} key={sub.id} className="rounded-lg border bg-muted/50 px-4">
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-4">
+                            <Avatar>
+                              <AvatarImage src={sub.studentAvatarUrl} alt={sub.studentName} data-ai-hint="person" />
+                              <AvatarFallback>{sub.studentName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                            </Avatar>
+                            <div className="text-left">
+                              <p className="font-semibold">{sub.studentName}</p>
+                              <p className="text-sm text-muted-foreground">
+                                Submitted {formatDistanceToNow(new Date(sub.submittedAt), { addSuffix: true })}
+                              </p>
+                            </div>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div
+                            className="prose prose-sm dark:prose-invert max-w-none rounded-md border bg-background p-4"
+                            dangerouslySetInnerHTML={{ __html: sub.content }}
+                          />
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </CardContent>
+              </Card>
+          )}
 
           <Card className="mt-8">
             <CardHeader>

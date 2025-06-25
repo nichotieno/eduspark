@@ -3,7 +3,7 @@ import { getDb } from '@/lib/db';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import { DailyChallengePageClient } from './client';
-import type { DailyChallenge, ChallengeComment } from '@/lib/mock-data';
+import type { DailyChallenge, ChallengeComment, ChallengeCommunitySubmission } from '@/lib/mock-data';
 import type { User } from '@/lib/definitions';
 
 
@@ -43,11 +43,28 @@ export default async function DailyChallengePage() {
         session.id
     );
 
+    let communitySubmissions: ChallengeCommunitySubmission[] = [];
+    if (submission) {
+        communitySubmissions = await db.all<ChallengeCommunitySubmission[]>(`
+            SELECT
+                cs.id,
+                cs.content,
+                cs.submittedAt,
+                u.name as studentName,
+                u.avatarUrl as studentAvatarUrl
+            FROM challenge_submissions cs
+            JOIN users u ON cs.userId = u.id
+            WHERE cs.challengeId = ? AND cs.userId != ?
+            ORDER BY cs.submittedAt DESC
+        `, challenge.id, session.id);
+    }
+
     return (
         <DailyChallengePageClient
             challenge={challenge}
             initialComments={comments}
             hasSubmitted={!!submission}
+            communitySubmissions={communitySubmissions}
             session={session}
         />
     );

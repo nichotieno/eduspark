@@ -191,6 +191,14 @@ async function seed() {
             avatarUrl: 'https://placehold.co/100x100.png' 
         },
         { 
+            id: 'user_student_2', 
+            name: 'Beth Smith', 
+            email: 'student2@example.com', 
+            password: 'password123', 
+            role: 'student', 
+            avatarUrl: 'https://placehold.co/100x100.png'
+        },
+        { 
             id: 'user_teacher_1', 
             name: 'Prof. Ada', 
             email: 'teacher@example.com', 
@@ -286,15 +294,15 @@ async function seed() {
     
     // Seed initial student progress for demonstration
     console.log('Seeding initial student progress...');
-    const studentId = 'user_student_1';
+    const studentId1 = 'user_student_1';
     const lessonId = 'm1'; // Intro to Algebra
     const now = new Date();
     const yesterday = new Date();
     yesterday.setDate(now.getDate() - 1);
 
-    await db.run('INSERT INTO user_progress (userId, lessonId, completedAt, xpEarned) VALUES (?, ?, ?, ?)', studentId, lessonId, now.toISOString(), 100);
-    await db.run('INSERT INTO user_streaks (userId, "date") VALUES (?, ?)', studentId, yesterday.toISOString().split('T')[0]);
-    await db.run('INSERT INTO user_badges (userId, badgeId, earnedAt) VALUES (?, ?, ?)', studentId, 'b1', now.toISOString()); // Math Beginner badge
+    await db.run('INSERT INTO user_progress (userId, lessonId, completedAt, xpEarned) VALUES (?, ?, ?, ?)', studentId1, lessonId, now.toISOString(), 100);
+    await db.run('INSERT INTO user_streaks (userId, "date") VALUES (?, ?)', studentId1, yesterday.toISOString().split('T')[0]);
+    await db.run('INSERT INTO user_badges (userId, badgeId, earnedAt) VALUES (?, ?, ?)', studentId1, 'b1', now.toISOString()); // Math Beginner badge
     console.log('Initial student progress seeded.');
     
     // Seed Challenges
@@ -310,8 +318,17 @@ async function seed() {
 
     // Seed Challenge Comments for demonstration
     console.log('Seeding initial challenge comments...');
-    await db.run('INSERT INTO challenge_comments (id, challengeId, userId, comment, timestamp) VALUES (?, ?, ?, ?, ?)', `comment_${crypto.randomUUID()}`, 'dc1', studentId, 'This is a classic Traveling Salesperson Problem!', new Date().toISOString());
+    await db.run('INSERT INTO challenge_comments (id, challengeId, userId, comment, timestamp) VALUES (?, ?, ?, ?, ?)', `comment_${crypto.randomUUID()}`, 'dc1', studentId1, 'This is a classic Traveling Salesperson Problem!', new Date().toISOString());
     console.log('Initial challenge comments seeded.');
+
+    // Seed Challenge Submissions for demonstration
+    console.log('Seeding initial challenge submissions...');
+    const studentId2 = 'user_student_2';
+    await db.run(
+        'INSERT INTO challenge_submissions (id, challengeId, userId, content, submittedAt) VALUES (?, ?, ?, ?, ?)',
+        `sub_${crypto.randomUUID()}`, 'dc1', studentId2, '<p>I think the shortest path is A -> B -> D -> C -> A. That adds up to 10 + 25 + 30 + 15 = 80km. I checked the other paths and they seemed longer.</p>', new Date().toISOString()
+    );
+    console.log('Initial challenge submissions seeded.');
 
 
     console.log('Database seeded successfully!');

@@ -107,6 +107,13 @@ export type AssignmentSubmission = {
   studentAvatarUrl: string;
 };
 
+export type ChallengeCommunitySubmission = {
+  id: string;
+  content: string;
+  submittedAt: string;
+  studentName: string;
+  studentAvatarUrl: string;
+};
 
 
 // Mock Data
