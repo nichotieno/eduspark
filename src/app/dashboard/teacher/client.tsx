@@ -26,6 +26,8 @@ import {
   type Topic,
   type Lesson,
   type DailyAssignment,
+  type CourseEnrollment,
+  type RecentSubmission,
 } from "@/lib/mock-data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -67,8 +69,10 @@ import {
   Calculator,
   FlaskConical,
   BookOpen,
+  Users,
+  Activity,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import {
@@ -81,6 +85,8 @@ import {
   updateAssignment,
 } from './actions';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 
 type StudentProgressData = {
   studentId: string;
@@ -90,12 +96,20 @@ type StudentProgressData = {
   lastActive: string;
 };
 
+type AnalyticsData = {
+    totalStudents: number;
+    averageProgress: number;
+    courseEnrollments: CourseEnrollment[];
+    recentSubmissions: RecentSubmission[];
+};
+
 type TeacherDashboardClientProps = {
     initialCourses: Omit<Course, 'Icon'>[];
     initialTopics: Topic[];
     initialLessons: Lesson[];
     initialAssignments: DailyAssignment[];
     initialStudents: StudentProgressData[];
+    analytics: AnalyticsData;
 };
 
 type FormState = {
@@ -105,6 +119,13 @@ type FormState = {
 };
 
 const initialFormState: FormState = { message: '', success: false, errors: {} };
+
+const chartConfig = {
+  students: {
+    label: "Students",
+    color: "hsl(var(--chart-1))",
+  },
+} satisfies ChartConfig
 
 function SubmitButton({ children }: { children: React.ReactNode }) {
     const { pending } = useFormStatus();
@@ -117,6 +138,7 @@ export function TeacherDashboardClient({
   initialLessons,
   initialAssignments,
   initialStudents,
+  analytics,
 }: TeacherDashboardClientProps) {
   const { toast } = useToast();
 
@@ -273,12 +295,99 @@ export function TeacherDashboardClient({
         </p>
       </div>
 
-      <Tabs defaultValue="students" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="students">Student Progress</TabsTrigger>
           <TabsTrigger value="courses">Course Management</TabsTrigger>
           <TabsTrigger value="assignments">Daily Assignments</TabsTrigger>
         </TabsList>
+        <TabsContent value="overview">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{analytics.totalStudents}</div>
+                    </CardContent>
+                </Card>
+                 <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Average Progress</CardTitle>
+                        <Activity className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{analytics.averageProgress}%</div>
+                    </CardContent>
+                </Card>
+            </div>
+             <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-7">
+                <Card className="lg:col-span-4">
+                  <CardHeader>
+                    <CardTitle>Course Engagement</CardTitle>
+                    <CardDescription>Number of students who have started each course.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pl-2">
+                    <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                      <BarChart
+                        accessibilityLayer
+                        data={analytics.courseEnrollments}
+                        margin={{
+                          left: 12,
+                          right: 12,
+                        }}
+                      >
+                        <CartesianGrid vertical={false} />
+                        <XAxis
+                          dataKey="courseTitle"
+                          tickLine={false}
+                          axisLine={false}
+                          tickMargin={8}
+                          tickFormatter={(value) => value.slice(0, 15)}
+                        />
+                        <ChartTooltip
+                          cursor={false}
+                          content={<ChartTooltipContent indicator="dot" />}
+                        />
+                        <Bar dataKey="enrolledStudents" fill="var(--color-students)" radius={4} />
+                      </BarChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+
+                <Card className="lg:col-span-3">
+                  <CardHeader>
+                    <CardTitle>Recent Submissions</CardTitle>
+                    <CardDescription>The latest assignment submissions from your students.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                     {analytics.recentSubmissions.length > 0 ? (
+                      <div className="space-y-4">
+                        {analytics.recentSubmissions.map((submission) => (
+                          <div key={submission.id} className="flex items-center">
+                            <Avatar className="h-9 w-9">
+                              <AvatarImage src={submission.studentAvatarUrl} alt={submission.studentName} data-ai-hint="person" />
+                              <AvatarFallback>{submission.studentName.split(" ").map((n) => n[0]).join("")}</AvatarFallback>
+                            </Avatar>
+                            <div className="ml-4 space-y-1">
+                              <p className="text-sm font-medium leading-none">{submission.studentName}</p>
+                              <p className="text-sm text-muted-foreground">{submission.assignmentTitle}</p>
+                            </div>
+                            <div className="ml-auto text-sm text-muted-foreground">
+                              {formatDistanceToNow(new Date(submission.submittedAt), { addSuffix: true })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-sm text-muted-foreground py-8">No submissions yet.</p>
+                    )}
+                  </CardContent>
+                </Card>
+            </div>
+        </TabsContent>
         <TabsContent value="students">
           <Card>
             <CardHeader>

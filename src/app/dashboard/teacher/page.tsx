@@ -1,6 +1,6 @@
 import { getDb } from '@/lib/db';
 import { TeacherDashboardClient } from './client';
-import type { Course, Topic, Lesson, DailyAssignment } from "@/lib/mock-data";
+import type { Course, Topic, Lesson, DailyAssignment, RecentSubmission, CourseEnrollment } from "@/lib/mock-data";
 import type { User } from '@/lib/definitions';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -16,12 +16,35 @@ export default async function TeacherDashboard() {
   const db = await getDb();
 
   try {
-    const [courses, topics, lessons, assignmentsData, students] = await Promise.all([
-      db.all<Course[]>('SELECT * FROM courses'),
+    const [courses, topics, lessons, assignmentsData, students, courseEnrollmentsData, recentSubmissionsData] = await Promise.all([
+      db.all<Omit<Course, 'Icon'>[]>('SELECT * FROM courses'),
       db.all<Topic[]>('SELECT * FROM topics'),
       db.all<Lesson[]>('SELECT * FROM lessons'),
       db.all('SELECT * FROM assignments'),
-      db.all<User[]>('SELECT id, name, avatarUrl FROM users WHERE role = "student"')
+      db.all<User[]>('SELECT id, name, avatarUrl FROM users WHERE role = "student"'),
+      db.all<CourseEnrollment[]>(`
+          SELECT 
+              c.id as courseId, 
+              c.title as courseTitle, 
+              COUNT(DISTINCT up.userId) as enrolledStudents
+          FROM courses c
+          LEFT JOIN lessons l ON c.id = l.courseId
+          LEFT JOIN user_progress up ON l.id = up.lessonId
+          GROUP BY c.id, c.title
+      `),
+      db.all<RecentSubmission[]>(`
+          SELECT 
+              s.id, 
+              s.submittedAt,
+              u.name as studentName,
+              u.avatarUrl as studentAvatarUrl,
+              a.title as assignmentTitle
+          FROM submissions s
+          JOIN users u ON s.userId = u.id
+          JOIN assignments a ON s.assignmentId = a.id
+          ORDER BY s.submittedAt DESC
+          LIMIT 5
+      `)
     ]);
     
     const assignments = assignmentsData.map(a => ({...a, dueDate: new Date(a.dueDate)}));
@@ -52,6 +75,9 @@ export default async function TeacherDashboard() {
       })
     );
 
+    const totalProgress = studentProgressList.reduce((acc, student) => acc + student.progress, 0);
+    const averageProgress = students.length > 0 ? Math.round(totalProgress / students.length) : 0;
+
     return (
       <TeacherDashboardClient
         initialCourses={courses}
@@ -59,6 +85,12 @@ export default async function TeacherDashboard() {
         initialLessons={lessons}
         initialAssignments={assignments}
         initialStudents={studentProgressList}
+        analytics={{
+            totalStudents: students.length,
+            averageProgress: averageProgress,
+            courseEnrollments: courseEnrollmentsData,
+            recentSubmissions: recentSubmissionsData,
+        }}
       />
     );
 

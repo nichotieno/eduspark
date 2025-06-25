@@ -13,7 +13,6 @@ export type Course = {
   id: string;
   title: string;
   description: string;
-  Icon: React.ElementType;
 };
 
 export type Topic = {
@@ -85,6 +84,21 @@ export type DailyAssignment = {
   dueDate: Date;
 };
 
+export type RecentSubmission = {
+  id: string;
+  submittedAt: string;
+  studentName: string;
+  studentAvatarUrl: string;
+  assignmentTitle: string;
+};
+
+export type CourseEnrollment = {
+  courseId: string;
+  courseTitle: string;
+  enrolledStudents: number;
+};
+
+
 
 // Mock Data
 export const mockBadges: Badge[] = [
@@ -96,18 +110,16 @@ export const mockBadges: Badge[] = [
   { id: 'b6', name: 'Challenge Solver', description: 'Solve your first daily challenge.', Icon: Trophy },
 ];
 
-export const mockCourses: Course[] = [
+export const mockCourses: Omit<Course, 'Icon'>[] = [
   {
     id: "math",
     title: "Core Math",
     description: "Build your foundational math skills from the ground up.",
-    Icon: Calculator,
   },
   {
     id: "science",
     title: "Core Science",
     description: "Explore the fundamental principles of the natural world.",
-    Icon: FlaskConical,
   },
 ];
 
