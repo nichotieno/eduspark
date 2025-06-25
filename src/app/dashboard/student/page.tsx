@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Flame, Medal, Sparkles, Clock, Calculator, FlaskConical, BookOpen, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from 'date-fns';
-import { type SessionPayload } from "@/lib/session";
+import { useSession } from "@/contexts/session-context";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const getFromLocalStorage = (key: string, defaultValue: any) => {
@@ -90,22 +90,11 @@ export default function StudentDashboard() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [assignments, setAssignments] = useState<DailyAssignment[]>([]);
-  const [session, setSession] = useState<SessionPayload | null>(null);
   const [loading, setLoading] = useState(true);
+  const { session, isLoading: isSessionLoading } = useSession();
 
   useEffect(() => {
     const fetchData = async () => {
-      // Fetch session data from an API route
-      try {
-        const res = await fetch('/api/auth/session');
-        const data = await res.json();
-        if (data.session) {
-          setSession(data.session);
-        }
-      } catch (error) {
-        console.error("Failed to fetch session:", error);
-      }
-      
       // Fetch content from local storage for now
       const savedCourses = getFromLocalStorage('courses', []).map((c: any) => {
           let IconComponent = BookOpen;
@@ -132,7 +121,9 @@ export default function StudentDashboard() {
     (assignment) => new Date(assignment.dueDate) > now
   );
 
-  if (loading) {
+  const isLoading = loading || isSessionLoading;
+
+  if (isLoading) {
       return (
           <div>
               <Skeleton className="h-10 w-1/2 mb-8" />
