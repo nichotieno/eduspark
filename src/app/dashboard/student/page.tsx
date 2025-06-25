@@ -94,26 +94,33 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-     // Fetch session data from an API route
-    fetch('/api/auth/session')
-      .then(res => res.json())
-      .then(data => {
+    const fetchData = async () => {
+      // Fetch session data from an API route
+      try {
+        const res = await fetch('/api/auth/session');
+        const data = await res.json();
         if (data.session) {
           setSession(data.session);
         }
-      });
+      } catch (error) {
+        console.error("Failed to fetch session:", error);
+      }
       
-    // Fetch content from local storage for now
-    const savedCourses = getFromLocalStorage('courses', []).map((c: any) => {
-        let IconComponent = BookOpen;
-        if (c.id === "math") IconComponent = Calculator;
-        else if (c.id === "science") IconComponent = FlaskConical;
-        return { ...c, Icon: IconComponent };
-    });
-    setCourses(savedCourses);
-    setLessons(getFromLocalStorage('lessons', []));
-    setAssignments(getFromLocalStorage('assignments', initialAssignments));
-    setLoading(false);
+      // Fetch content from local storage for now
+      const savedCourses = getFromLocalStorage('courses', []).map((c: any) => {
+          let IconComponent = BookOpen;
+          if (c.id === "math") IconComponent = Calculator;
+          else if (c.id === "science") IconComponent = FlaskConical;
+          return { ...c, Icon: IconComponent };
+      });
+      setCourses(savedCourses);
+      setLessons(getFromLocalStorage('lessons', []));
+      setAssignments(getFromLocalStorage('assignments', initialAssignments));
+      
+      setLoading(false);
+    };
+
+    fetchData();
   }, []);
 
   const userBadges = mockBadges.slice(0, 3);
