@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -67,20 +68,29 @@ export default function LessonPage() {
     notFound();
   }
 
+  const hasSteps = lesson.steps && lesson.steps.length > 0;
+  const hasQuestions = lesson.questions && lesson.questions.length > 0;
+
+  // Automatically complete lessons that have no content.
+  useEffect(() => {
+    if (!isLoading && !hasSteps && !hasQuestions) {
+      setLessonComplete(true);
+    }
+  }, [isLoading, hasSteps, hasQuestions]);
+
   const totalItems = (lesson.steps?.length || 0) + lesson.questions.length;
-  const progress = ((currentItemIndex + 1) / totalItems) * 100;
+  const progress = lessonComplete ? 100 : totalItems > 0 ? (currentItemIndex / totalItems) * 100 : 0;
   
-  const isLearningPhase = currentItemIndex < (lesson.steps?.length || 0);
+  const isLearningPhase = hasSteps && currentItemIndex < lesson.steps.length;
   const currentStep = isLearningPhase ? lesson.steps[currentItemIndex] : null;
   
-  const isQuizPhase = currentItemIndex >= (lesson.steps?.length || 0);
+  const isQuizPhase = !isLearningPhase;
   const currentQuestionIndex = isQuizPhase ? currentItemIndex - (lesson.steps?.length || 0) : -1;
-  const question = isQuizPhase ? lesson.questions[currentQuestionIndex] : null;
+  const question = isQuizPhase && hasQuestions ? lesson.questions[currentQuestionIndex] : null;
 
   const handleBack = () => {
     if (currentItemIndex > 0) {
       setCurrentItemIndex(currentItemIndex - 1);
-      // Reset quiz state if we're moving from the first question back to the learning phase
       if (isQuizPhase && currentQuestionIndex === 0) {
         setSelectedAnswer(null);
         setFeedback(null);
@@ -90,8 +100,17 @@ export default function LessonPage() {
   };
 
   const handleNextStep = () => {
-    if (isLearningPhase && currentItemIndex < lesson.steps.length) {
-      setCurrentItemIndex(currentItemIndex + 1);
+    if (isLearningPhase && lesson.steps) {
+      if (currentItemIndex < lesson.steps.length - 1) {
+        setCurrentItemIndex(currentItemIndex + 1);
+      } else {
+        // This is the last step
+        if (hasQuestions) {
+          setCurrentItemIndex(currentItemIndex + 1); // Go to quiz
+        } else {
+          setLessonComplete(true); // No questions, so lesson is done
+        }
+      }
     }
   };
 
@@ -115,7 +134,7 @@ export default function LessonPage() {
   }
 
   const nextQuestion = () => {
-    if (currentQuestionIndex < lesson.questions.length - 1) {
+    if (hasQuestions && currentQuestionIndex < lesson.questions.length - 1) {
       setCurrentItemIndex(currentItemIndex + 1);
       setSelectedAnswer(null);
       setFeedback(null);
@@ -146,7 +165,7 @@ export default function LessonPage() {
                 <CardFooter className="flex flex-col gap-2">
                     {nextLesson ? (
                         <Button className="w-full" asChild>
-                            <Link href={`/courses/${nextLesson.courseId}/lessons/${nextLesson.id}`}>Next Lesson</Link>
+                            <Link href={`/courses/${nextLesson.courseId}/lessons/${nextLesson.id}`} onClick={() => window.location.reload()}>Next Lesson</Link>
                         </Button>
                     ) : (
                          <Button className="w-full" asChild>
@@ -276,12 +295,14 @@ export default function LessonPage() {
 
                 {isLearningPhase && (
                     <Button onClick={handleNextStep}>
-                        {currentItemIndex === lesson.steps.length - 1 ? 'Start Quiz' : 'Next'}
-                        {currentItemIndex < lesson.steps.length - 1 && <ChevronRight className="mr-2 h-4 w-4" />}
+                        {currentItemIndex === lesson.steps.length - 1 
+                            ? (hasQuestions ? 'Start Quiz' : 'Complete Lesson') 
+                            : 'Next'}
+                        {currentItemIndex < lesson.steps.length - 1 && <ChevronRight className="ml-2 h-4 w-4" />}
                     </Button>
                 )}
 
-                {isQuizPhase && (
+                {isQuizPhase && hasQuestions && (
                     <div className="flex items-center gap-2">
                          <Button
                             variant="outline"
