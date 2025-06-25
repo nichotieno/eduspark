@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -25,7 +25,7 @@ import {
   mockCourses as initialCourses,
   mockTopics as initialTopics,
   mockLessons as initialLessons,
-  mockDailyAssignments,
+  mockDailyAssignments as initialAssignments,
   type Course,
   type Topic,
   type Lesson,
@@ -66,43 +66,72 @@ import {
   CalendarIcon,
   BookCopy,
   BookMarked,
+  FilePenLine,
 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+
+
+// Helper to get data from localStorage
+const getFromLocalStorage = (key: string, defaultValue: any) => {
+  if (typeof window !== 'undefined') {
+    const saved = window.localStorage.getItem(key);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Parsing error from localStorage", e);
+        return defaultValue;
+      }
+    }
+  }
+  return defaultValue;
+};
+
+// Helper to save data to localStorage
+const saveToLocalStorage = (key: string, value: any) => {
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  }
+};
+
 
 export default function TeacherDashboard() {
   const classroom = mockTeacherData.classrooms[0];
   const { toast } = useToast();
 
-  // Course State
-  const [courses, setCourses] = useState<Course[]>(initialCourses);
+  // State initialization from localStorage or mock data
+  const [courses, setCourses] = useState<Course[]>(() => getFromLocalStorage('courses', initialCourses));
+  const [topics, setTopics] = useState<Topic[]>(() => getFromLocalStorage('topics', initialTopics));
+  const [lessons, setLessons] = useState<Lesson[]>(() => getFromLocalStorage('lessons', initialLessons));
+  const [assignments, setAssignments] = useState<DailyAssignment[]>(() => getFromLocalStorage('assignments', initialAssignments.map(a => ({...a, dueDate: new Date(a.dueDate)}))));
+
+  // Persist state to localStorage on change
+  useEffect(() => saveToLocalStorage('courses', courses), [courses]);
+  useEffect(() => saveToLocalStorage('topics', topics), [topics]);
+  useEffect(() => saveToLocalStorage('lessons', lessons), [lessons]);
+  useEffect(() => saveToLocalStorage('assignments', assignments), [assignments]);
+
+  // Dialog states
   const [isCourseDialogOpen, setIsCourseDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [courseTitle, setCourseTitle] = useState("");
   const [courseDescription, setCourseDescription] = useState("");
 
-  // Topic State
-  const [topics, setTopics] = useState<Topic[]>(initialTopics);
   const [isTopicDialogOpen, setIsTopicDialogOpen] = useState(false);
   const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
   const [topicTitle, setTopicTitle] = useState("");
   const [currentCourseIdForTopic, setCurrentCourseIdForTopic] = useState<string | null>(null);
 
-  // Lesson State
-  const [lessons, setLessons] = useState<Lesson[]>(initialLessons);
   const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false);
-  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [lessonTitle, setLessonTitle] = useState("");
   const [lessonXp, setLessonXp] = useState(100);
   const [currentTopicIdForLesson, setCurrentTopicIdForLesson] = useState<string | null>(null);
 
-  // Assignment State
-  const [assignments, setAssignments] =
-    useState<DailyAssignment[]>(mockDailyAssignments);
   const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
-  const [editingAssignment, setEditingAssignment] =
-    useState<DailyAssignment | null>(null);
+  const [editingAssignment, setEditingAssignment] = useState<DailyAssignment | null>(null);
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [assignmentProblem, setAssignmentProblem] = useState("");
   const [assignmentDueDate, setAssignmentDueDate] = useState<Date | undefined>();
@@ -226,18 +255,9 @@ export default function TeacherDashboard() {
 
   // Lesson Handlers
   const handleCreateNewLesson = (topicId: string) => {
-    setEditingLesson(null);
     setLessonTitle("");
     setLessonXp(100);
     setCurrentTopicIdForLesson(topicId);
-    setIsLessonDialogOpen(true);
-  };
-
-  const handleEditLesson = (lesson: Lesson) => {
-    setEditingLesson(lesson);
-    setLessonTitle(lesson.title);
-    setLessonXp(lesson.xp);
-    setCurrentTopicIdForLesson(lesson.topicId);
     setIsLessonDialogOpen(true);
   };
 
@@ -266,17 +286,7 @@ export default function TeacherDashboard() {
        return;
     }
 
-
-    if (editingLesson) {
-      setLessons(
-        lessons.map((l) =>
-          l.id === editingLesson.id
-            ? { ...l, title: lessonTitle, xp: lessonXp }
-            : l
-        )
-      );
-      toast({ title: "Lesson Updated" });
-    } else if (currentTopicIdForLesson) {
+    if (currentTopicIdForLesson) {
       const newLesson: Lesson = {
         id: `lesson_${Date.now()}`,
         topicId: currentTopicIdForLesson,
@@ -290,7 +300,6 @@ export default function TeacherDashboard() {
       toast({ title: "Lesson Created" });
     }
     setIsLessonDialogOpen(false);
-    setEditingLesson(null);
   };
 
   // Assignment Handlers
@@ -306,7 +315,7 @@ export default function TeacherDashboard() {
     setEditingAssignment(assignment);
     setAssignmentTitle(assignment.title);
     setAssignmentProblem(assignment.problem);
-    setAssignmentDueDate(assignment.dueDate);
+    setAssignmentDueDate(new Date(assignment.dueDate));
     setIsAssignmentDialogOpen(true);
   };
 
@@ -540,7 +549,11 @@ export default function TeacherDashboard() {
                                                         <Badge variant="secondary">{lesson.xp} XP</Badge>
                                                    </div>
                                                    <div className="flex shrink-0">
-                                                        <Button variant="ghost" size="icon" onClick={() => handleEditLesson(lesson)}><Pencil className="h-4 w-4" /></Button>
+                                                        <Button variant="ghost" size="icon" asChild>
+                                                            <Link href={`/dashboard/teacher/lessons/${lesson.id}`}>
+                                                                <FilePenLine className="h-4 w-4" />
+                                                            </Link>
+                                                        </Button>
                                                         <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteLesson(lesson.id)}><Trash2 className="h-4 w-4" /></Button>
                                                    </div>
                                                 </div>
@@ -615,7 +628,7 @@ export default function TeacherDashboard() {
                           </div>
                         </CardTitle>
                         <CardDescription>
-                          Due: {format(assignment.dueDate, "PPP")}
+                          Due: {format(new Date(assignment.dueDate), "PPP")}
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
@@ -741,13 +754,9 @@ export default function TeacherDashboard() {
       <Dialog open={isLessonDialogOpen} onOpenChange={setIsLessonDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>
-              {editingLesson ? "Edit Lesson" : "Create New Lesson"}
-            </DialogTitle>
+            <DialogTitle>Create New Lesson</DialogTitle>
             <DialogDescription>
-              {editingLesson
-                ? "Update the details for this lesson."
-                : "Fill in the details for your new lesson."}
+             Fill in the details for your new lesson. You can add content after creation.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleLessonFormSubmit}>
@@ -784,7 +793,7 @@ export default function TeacherDashboard() {
                 </Button>
               </DialogClose>
               <Button type="submit">
-                {editingLesson ? "Save Changes" : "Create Lesson"}
+                Create Lesson
               </Button>
             </DialogFooter>
           </form>
