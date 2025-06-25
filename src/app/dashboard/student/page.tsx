@@ -73,8 +73,7 @@ export default async function StudentDashboardPage() {
   }
 
   // Fetch other data
-  const courses = await db.all<Course[]>("SELECT * FROM courses");
-  const lessons = await db.all<Lesson[]>("SELECT * FROM lessons");
+  const courses = await db.all<Omit<Course, 'Icon'>[]>("SELECT * FROM courses");
   const assignmentsData = await db.all(
     "SELECT * FROM assignments WHERE dueDate > ?",
     new Date().toISOString()
@@ -84,13 +83,29 @@ export default async function StudentDashboardPage() {
     dueDate: new Date(a.dueDate),
   }));
 
+  // Logic to find the next lesson for the "Continue Learning" card
+  const allLessons = await db.all<Lesson[]>('SELECT * FROM lessons ORDER BY id');
+  const userProgress = await db.all<{ lessonId: string }>('SELECT lessonId FROM user_progress WHERE userId = ?', session.id);
+  const completedLessonIds = new Set(userProgress.map(p => p.lessonId));
+
+  let nextLesson: (Lesson & { course: Omit<Course, 'Icon'> }) | null = null;
+  for (const lesson of allLessons) {
+      if (!completedLessonIds.has(lesson.id)) {
+          const courseForLesson = courses.find(c => c.id === lesson.courseId);
+          if (courseForLesson) {
+              nextLesson = { ...lesson, course: courseForLesson };
+          }
+          break;
+      }
+  }
+
   return (
     <StudentDashboardClient
       user={session}
       stats={{ totalXp, dayStreak, badgesEarned }}
       courses={courses}
-      lessons={lessons}
       assignments={assignments}
+      nextLesson={nextLesson}
     />
   );
 }

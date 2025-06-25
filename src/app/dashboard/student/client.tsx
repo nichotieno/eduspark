@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Flame, Medal, Sparkles, Clock, ChevronRight, BookOpen, Calculator, FlaskConical } from "lucide-react";
+import { Flame, Medal, Sparkles, Clock, ChevronRight, BookOpen, Calculator, FlaskConical, Trophy } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from 'date-fns';
 import { type SessionPayload } from "@/lib/session";
@@ -27,8 +27,8 @@ type StudentDashboardClientProps = {
         badgesEarned: number;
     };
     courses: Omit<Course, 'Icon'>[];
-    lessons: Lesson[];
     assignments: DailyAssignment[];
+    nextLesson: (Lesson & { course: Omit<Course, 'Icon'> }) | null;
 };
 
 const StatCard = ({
@@ -83,13 +83,11 @@ export function StudentDashboardClient({
     user,
     stats,
     courses,
-    lessons,
     assignments,
+    nextLesson
 }: StudentDashboardClientProps) {
 
   const userBadges = stats.badgesEarned > 0 ? [{ id: 'b1', name: 'Math Beginner', Icon: Medal }] : [];
-  const firstLesson = lessons.length > 0 ? lessons[0] : null;
-  const firstCourse = firstLesson ? courses.find(c => c.id === firstLesson.courseId) : null;
   const activeAssignments = assignments;
 
   return (
@@ -137,16 +135,16 @@ export function StudentDashboardClient({
         <div className="space-y-8">
             <div>
                 <h2 className="mb-4 font-headline text-2xl font-bold">Continue Learning</h2>
-                 {firstLesson && firstCourse ? (
+                 {nextLesson ? (
                     <Card>
                         <CardHeader>
-                            <CardTitle>{firstLesson.title}</CardTitle>
-                            <CardDescription>{firstCourse.title}</CardDescription>
+                            <CardTitle>{nextLesson.title}</CardTitle>
+                            <CardDescription>{nextLesson.course.title}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <p className="text-sm text-muted-foreground mb-4">You're doing great, keep it up!</p>
                             <Button className="w-full" asChild>
-                                <Link href={`/courses/${firstLesson.courseId}/lessons/${firstLesson.id}`}>
+                                <Link href={`/courses/${nextLesson.courseId}/lessons/${nextLesson.id}`}>
                                     Jump Back In
                                 </Link>
                             </Button>
@@ -154,8 +152,14 @@ export function StudentDashboardClient({
                     </Card>
                 ) : (
                   <Card>
-                    <CardContent className="flex items-center justify-center p-6 text-center">
-                      <p className="text-sm text-muted-foreground">Start a course to begin your journey!</p>
+                    <CardContent className="flex flex-col items-center justify-center gap-4 p-6 text-center">
+                        <Trophy className="h-10 w-10 text-amber-400" />
+                        <div>
+                            <h3 className="font-semibold">All Lessons Complete!</h3>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                You've finished all available lessons. Great job!
+                            </p>
+                        </div>
                     </CardContent>
                   </Card>
                 )}
