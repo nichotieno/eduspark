@@ -20,7 +20,7 @@ export default async function TeacherDashboard() {
       db.all<Omit<Course, 'Icon'>[]>('SELECT * FROM courses'),
       db.all<Topic[]>('SELECT * FROM topics'),
       db.all<Lesson[]>('SELECT * FROM lessons'),
-      db.all('SELECT * FROM assignments'),
+      db.all('SELECT * FROM assignments ORDER BY dueDate DESC'),
       db.all<User[]>('SELECT id, name, avatarUrl FROM users WHERE role = "student"'),
       db.all<CourseEnrollment[]>(`
           SELECT 

@@ -85,7 +85,7 @@ import {
   updateAssignment,
 } from './actions';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 
 type StudentProgressData = {
@@ -334,19 +334,22 @@ export function TeacherDashboardClient({
                       <BarChart
                         accessibilityLayer
                         data={analytics.courseEnrollments}
+                        layout="vertical"
                         margin={{
-                          left: 12,
+                          left: -20,
                           right: 12,
                         }}
                       >
-                        <CartesianGrid vertical={false} />
-                        <XAxis
+                         <CartesianGrid horizontal={false} />
+                        <YAxis
                           dataKey="courseTitle"
+                          type="category"
                           tickLine={false}
                           axisLine={false}
-                          tickMargin={8}
+                          tickMargin={10}
                           tickFormatter={(value) => value.slice(0, 15)}
                         />
+                        <XAxis dataKey="enrolledStudents" type="number" hide />
                         <ChartTooltip
                           cursor={false}
                           content={<ChartTooltipContent indicator="dot" />}
