@@ -39,7 +39,6 @@ export async function login(
   }
 
   const { email, password } = validatedFields.data;
-  let user: User;
 
   try {
     const db = await getDb();
@@ -55,8 +54,7 @@ export async function login(
       return { error: 'Invalid email or password.' };
     }
 
-    // Create a user object for the session that does NOT include the password
-    user = {
+    const user: User = {
       id: dbUser.id,
       name: dbUser.name,
       email: dbUser.email,
@@ -64,19 +62,18 @@ export async function login(
       avatarUrl: dbUser.avatarUrl,
     };
 
-    // Create session with the clean user object
     await createSession(user);
+    
+    if (user.role === 'teacher') {
+        redirect('/dashboard/teacher');
+    } else {
+        redirect('/dashboard/student');
+    }
 
   } catch (error) {
     console.error(error);
     return { error: 'An unexpected error occurred. Please try again.' };
   }
-  
-  // Redirect based on role
-  if (user.role === 'teacher') {
-      redirect('/dashboard/teacher');
-  }
-  redirect('/dashboard/student');
 }
 
 
@@ -98,7 +95,6 @@ export async function signup(
   try {
     const db = await getDb();
 
-    // Check if user already exists
     const existingUser = await db.get('SELECT id FROM users WHERE email = ?', email);
     if (existingUser) {
       return { error: 'A user with this email already exists.' };
@@ -116,15 +112,15 @@ export async function signup(
     const newUser: User = { id: userId, name, email, role, avatarUrl };
     await createSession(newUser);
 
+    if (role === 'teacher') {
+      redirect('/dashboard/teacher');
+    } else {
+      redirect('/dashboard/student');
+    }
   } catch (error) {
     console.error(error);
     return { error: 'An unexpected error occurred. Please try again.' };
   }
-
-  if (role === 'teacher') {
-      redirect('/dashboard/teacher');
-  }
-  redirect('/dashboard/student');
 }
 
 export async function logout() {
