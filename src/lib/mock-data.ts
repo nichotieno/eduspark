@@ -90,7 +90,7 @@ export type StudentAssignment = {
   title: string;
   courseTitle: string;
   dueDate: Date;
-  status: 'To Do' | 'Submitted' | 'Graded';
+  status: 'To Do' | 'Submitted' | 'Graded' | 'Past Due';
   grade: number | null;
 };
 

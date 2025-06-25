@@ -34,11 +34,13 @@ export default async function StudentAssignmentsPage() {
   }
 
   const allAssignments: StudentAssignment[] = assignmentsData.map(a => {
-    let status: 'To Do' | 'Submitted' | 'Graded' = 'To Do';
+    let status: StudentAssignment['status'] = 'To Do';
+    const isPastDue = new Date(a.dueDate) < new Date();
+
     if (a.submissionId) {
         status = a.grade !== null ? 'Graded' : 'Submitted';
-    } else if (new Date(a.dueDate) < new Date()) {
-        // You could add a 'Past Due' status here if desired
+    } else if (isPastDue) {
+        status = 'Past Due';
     }
     
     return {
@@ -51,15 +53,17 @@ export default async function StudentAssignmentsPage() {
     }
   });
 
-  const toDo = allAssignments.filter(a => a.status === 'To Do' && a.dueDate >= new Date());
+  const toDo = allAssignments.filter(a => a.status === 'To Do');
   const submitted = allAssignments.filter(a => a.status === 'Submitted');
   const graded = allAssignments.filter(a => a.status === 'Graded');
+  const pastDue = allAssignments.filter(a => a.status === 'Past Due');
 
   return (
     <StudentAssignmentsClient 
         toDoAssignments={toDo}
         submittedAssignments={submitted}
         gradedAssignments={graded}
+        pastDueAssignments={pastDue}
     />
   );
 }

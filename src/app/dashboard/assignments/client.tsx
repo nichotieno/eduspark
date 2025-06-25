@@ -13,10 +13,10 @@ type PageProps = {
   toDoAssignments: StudentAssignment[];
   submittedAssignments: StudentAssignment[];
   gradedAssignments: StudentAssignment[];
+  pastDueAssignments: StudentAssignment[];
 };
 
 function AssignmentCard({ assignment }: { assignment: StudentAssignment }) {
-    const isPastDue = assignment.dueDate < new Date() && assignment.status === 'To Do';
     return (
         <Link href={`/dashboard/assignments/${assignment.id}`}>
             <Card className="transition-all hover:shadow-md hover:border-primary/30">
@@ -36,8 +36,8 @@ function AssignmentCard({ assignment }: { assignment: StudentAssignment }) {
                                 Grade: {assignment.grade}/100
                             </Badge>
                         ) : (
-                             <Badge variant={isPastDue ? "destructive" : "secondary"}>
-                                {isPastDue ? "Past Due" : assignment.status}
+                             <Badge variant={assignment.status === 'Past Due' ? "destructive" : "secondary"}>
+                                {assignment.status}
                             </Badge>
                         )}
                     </div>
@@ -76,16 +76,18 @@ export function StudentAssignmentsClient({
   toDoAssignments,
   submittedAssignments,
   gradedAssignments,
+  pastDueAssignments,
 }: PageProps) {
   return (
     <div className="container mx-auto py-8">
       <h1 className="font-headline text-3xl font-bold mb-8">My Assignments</h1>
       
       <Tabs defaultValue="todo" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
+        <TabsList className="grid w-full grid-cols-4 mb-6">
           <TabsTrigger value="todo">To Do</TabsTrigger>
           <TabsTrigger value="submitted">Submitted</TabsTrigger>
           <TabsTrigger value="graded">Graded</TabsTrigger>
+          <TabsTrigger value="pastdue">Past Due</TabsTrigger>
         </TabsList>
         <TabsContent value="todo">
             <AssignmentList assignments={toDoAssignments} emptyMessage="No assignments to do. Great job!" />
@@ -95,6 +97,9 @@ export function StudentAssignmentsClient({
         </TabsContent>
         <TabsContent value="graded">
              <AssignmentList assignments={gradedAssignments} emptyMessage="No graded assignments to show yet." />
+        </TabsContent>
+        <TabsContent value="pastdue">
+             <AssignmentList assignments={pastDueAssignments} emptyMessage="No past due assignments." />
         </TabsContent>
       </Tabs>
     </div>
