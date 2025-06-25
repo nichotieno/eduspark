@@ -79,6 +79,14 @@ export type ChallengeComment = {
   timestamp: string;
 };
 
+export type DailyAssignment = {
+  id: string;
+  title: string;
+  problem: string;
+  courseId: string;
+  dueDate: Date;
+};
+
 
 // Mock Data
 export const mockUser: User = {
@@ -398,3 +406,20 @@ export const mockChallengeComments: ChallengeComment[] = [
     { id: 'cc2', challengeId: 'dc1', userName: 'Marie C.', userAvatarUrl: 'https://placehold.co/100x100.png', comment: 'I found a path that is 80km. Can anyone beat that? A -> B -> D -> C -> A.', timestamp: '1 hour ago' },
     { id: 'cc3', challengeId: 'dc1', userName: 'Albert E.', userAvatarUrl: 'https://placehold.co/100x100.png', comment: 'Ah, I see! A -> D -> B -> C -> A is 100km. The order really matters!', timestamp: '30 mins ago' },
 ];
+
+export const mockDailyAssignments: DailyAssignment[] = [
+    {
+      id: 'da1',
+      title: 'Solving Linear Equations',
+      problem: 'Solve for x in the following equation: 3x - 7 = 14. Show your work.',
+      courseId: 'math',
+      dueDate: new Date(new Date().setDate(new Date().getDate() + 2)),
+    },
+    {
+      id: 'da2',
+      title: 'Planetary Orbits',
+      problem: 'Explain Kepler\'s First Law of Planetary Motion. Why are planetary orbits elliptical and not perfect circles?',
+      courseId: 'science',
+      dueDate: new Date(new Date().setDate(new Date().getDate() + 5)),
+    },
+  ];
