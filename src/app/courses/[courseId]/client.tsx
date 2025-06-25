@@ -16,7 +16,7 @@ import {
   Circle,
   ChevronLeft,
   Lock,
-  MapPin,
+  Flag,
   Calculator,
   FlaskConical,
   BookOpen,
@@ -70,9 +70,10 @@ export function CoursePageClient({
         </div>
       </div>
 
-      <div className="relative mx-auto w-full max-w-3xl py-16">
-        <div className="absolute left-1/2 top-0 bottom-0 w-1 -translate-x-1/2 bg-border/50"></div>
-        {topics.map((topic, index) => {
+      <div className="relative mx-auto max-w-2xl px-4 py-8">
+        <div className="absolute left-5 top-0 h-full w-0.5 bg-border/80"></div>
+
+        {topics.map((topic) => {
           const lessonsInTopic = lessons.filter((l) => l.topicId === topic.id);
           if (lessonsInTopic.length === 0) return null;
 
@@ -80,96 +81,77 @@ export function CoursePageClient({
           const topicUnlocked = isLessonUnlocked(firstLessonOfTopic.id);
 
           return (
-            <div
-              key={topic.id}
-              className={cn(
-                "relative mb-16 flex items-start justify-center",
-                index % 2 !== 0 && "flex-row-reverse"
-              )}
-            >
-              <div
-                className={cn(
-                  "w-[calc(50%-2.5rem)]",
-                  index % 2 !== 0 ? "text-right" : "text-left"
-                )}
-              >
-                <Card
-                  className={cn(
-                    "transition-all",
-                    !topicUnlocked && "bg-muted/50 opacity-60"
-                  )}
-                >
-                  <CardHeader>
-                    <CardTitle className="font-headline text-xl">
-                      {topic.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {lessonsInTopic.map((lesson) => {
-                      const unlocked = isLessonUnlocked(lesson.id);
-                      const completed = completedLessons[lesson.id];
-                      const LessonLinkWrapper = unlocked ? Link : "div";
-
-                      return (
-                        <LessonLinkWrapper
-                          key={lesson.id}
-                          href={
-                            unlocked
-                              ? `/courses/${course.id}/lessons/${lesson.id}`
-                              : "#"
-                          }
-                          className={cn(
-                            "block rounded-lg p-3 transition-colors",
-                            unlocked
-                              ? "cursor-pointer hover:bg-accent/50"
-                              : "cursor-not-allowed"
-                          )}
-                          aria-disabled={!unlocked}
-                        >
-                          <div
-                            className={cn(
-                              "flex items-center gap-3",
-                              index % 2 !== 0 && "flex-row-reverse justify-end"
-                            )}
-                          >
-                            {completed ? (
-                              <CheckCircle className="h-5 w-5 flex-shrink-0 text-green-500" />
-                            ) : unlocked ? (
-                              <Circle className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
-                            ) : (
-                              <Lock className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
-                            )}
-                            <div className="flex flex-col">
-                              <span className="font-semibold">
-                                {lesson.title}
-                              </span>
-                              <CardDescription>{lesson.xp} XP</CardDescription>
-                            </div>
-                          </div>
-                        </LessonLinkWrapper>
-                      );
-                    })}
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="absolute left-1/2 top-5 z-10 -translate-x-1/2">
+            <div key={topic.id} className="relative mb-12 pl-14">
+              <div className="absolute -left-1 top-1">
                 <div
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-full border-4",
+                    "flex h-12 w-12 items-center justify-center rounded-full border-4 bg-background",
                     topicUnlocked
-                      ? "border-background bg-primary"
-                      : "border-background bg-muted"
+                      ? "border-primary"
+                      : "border-muted"
                   )}
                 >
-                  <MapPin
+                  <Flag
                     className={cn(
                       "h-5 w-5",
                       topicUnlocked
-                        ? "text-primary-foreground"
+                        ? "text-primary"
                         : "text-muted-foreground"
                     )}
                   />
+                </div>
+              </div>
+
+              <div className={cn("transition-opacity", !topicUnlocked && "opacity-60")}>
+                <h2 className="font-headline text-2xl font-bold text-primary">{topic.title}</h2>
+                <div className="mt-4 space-y-4">
+                  {lessonsInTopic.map((lesson) => {
+                    const unlocked = isLessonUnlocked(lesson.id);
+                    const completed = completedLessons[lesson.id];
+                    const LessonLinkWrapper = unlocked ? Link : "div";
+
+                    return (
+                      <LessonLinkWrapper
+                        key={lesson.id}
+                        href={
+                          unlocked
+                            ? `/courses/${course.id}/lessons/${lesson.id}`
+                            : "#"
+                        }
+                        aria-disabled={!unlocked}
+                      >
+                        <Card
+                          className={cn(
+                            "transition-all",
+                            unlocked
+                              ? "cursor-pointer hover:border-primary/50 hover:shadow-md"
+                              : "cursor-not-allowed bg-muted/50"
+                          )}
+                        >
+                          <CardContent className="flex items-center gap-4 p-4">
+                            <div
+                              className={cn(
+                                "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full",
+                                completed ? "bg-green-100 dark:bg-green-900" : unlocked ? "bg-primary/10" : "bg-muted"
+                              )}
+                            >
+                              {completed ? (
+                                <CheckCircle className="h-5 w-5 text-green-500" />
+                              ) : unlocked ? (
+                                <Circle className="h-5 w-5 text-primary/80" />
+                              ) : (
+                                <Lock className="h-5 w-5 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div className="flex-grow">
+                              <p className="font-semibold">{lesson.title}</p>
+                              <CardDescription>{lesson.xp} XP</CardDescription>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </LessonLinkWrapper>
+                    );
+                  })}
                 </div>
               </div>
             </div>
