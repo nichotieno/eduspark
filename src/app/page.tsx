@@ -18,26 +18,12 @@ export default function LandingPage() {
           <EduSparkLogo className="h-8 w-8 text-primary" />
           <span className="text-xl font-bold font-headline">EduSpark</span>
         </Link>
-        <nav className="hidden items-center gap-6 md:flex">
-          <Link
-            href="/dashboard/student"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-          >
-            Courses
-          </Link>
-          <Link
-            href="/dashboard/teacher"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-          >
-            For Teachers
-          </Link>
-        </nav>
         <div className="flex items-center gap-4">
           <Button variant="ghost" asChild>
-            <Link href="/dashboard/student">Login</Link>
+            <Link href="/login">Login</Link>
           </Button>
           <Button asChild>
-            <Link href="/dashboard/student">
+            <Link href="/signup">
               Sign Up <ChevronRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
@@ -58,12 +44,9 @@ export default function LandingPage() {
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Button size="lg" asChild>
-              <Link href="/dashboard/student">
+              <Link href="/signup">
                 Start Learning Now <BookOpen className="ml-2 h-4 w-4" />
               </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="/dashboard/teacher">View Teacher Dashboard</Link>
             </Button>
           </div>
         </section>

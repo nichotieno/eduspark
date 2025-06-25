@@ -3,10 +3,7 @@
 
 import { useState, useEffect } from "react";
 import {
-  mockUser,
-  mockCourses as initialCourses,
   mockBadges,
-  mockLessons as initialLessons,
   mockDailyAssignments as initialAssignments,
   type DailyAssignment,
   type Course,
@@ -23,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Flame, Medal, Sparkles, Clock, Calculator, FlaskConical, BookOpen, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from 'date-fns';
+import { type SessionPayload } from "@/lib/session";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const getFromLocalStorage = (key: string, defaultValue: any) => {
   if (typeof window === 'undefined') return defaultValue;
@@ -30,7 +29,6 @@ const getFromLocalStorage = (key: string, defaultValue: any) => {
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      // When loading assignments, ensure the dueDate string is converted back to a Date object.
       if (key === 'assignments') {
         return parsed.map((a: any) => ({ ...a, dueDate: new Date(a.dueDate) }));
       }
@@ -42,7 +40,6 @@ const getFromLocalStorage = (key: string, defaultValue: any) => {
   }
   return defaultValue;
 };
-
 
 const StatCard = ({
   Icon,
@@ -93,21 +90,33 @@ export default function StudentDashboard() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [assignments, setAssignments] = useState<DailyAssignment[]>([]);
+  const [session, setSession] = useState<SessionPayload | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedCourses = getFromLocalStorage('courses', initialCourses).map((c: any) => {
+     // Fetch session data from an API route
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => {
+        if (data.session) {
+          setSession(data.session);
+        }
+      });
+      
+    // Fetch content from local storage for now
+    const savedCourses = getFromLocalStorage('courses', []).map((c: any) => {
         let IconComponent = BookOpen;
         if (c.id === "math") IconComponent = Calculator;
         else if (c.id === "science") IconComponent = FlaskConical;
         return { ...c, Icon: IconComponent };
     });
     setCourses(savedCourses);
-    setLessons(getFromLocalStorage('lessons', initialLessons));
+    setLessons(getFromLocalStorage('lessons', []));
     setAssignments(getFromLocalStorage('assignments', initialAssignments));
+    setLoading(false);
   }, []);
 
-
-  const userBadges = mockBadges.slice(0, mockUser.stats.badges);
+  const userBadges = mockBadges.slice(0, 3);
   const firstLesson = lessons.length > 0 ? lessons[0] : null;
   const firstCourse = firstLesson ? courses.find(c => c.id === firstLesson.courseId) : null;
 
@@ -116,11 +125,37 @@ export default function StudentDashboard() {
     (assignment) => new Date(assignment.dueDate) > now
   );
 
+  if (loading) {
+      return (
+          <div>
+              <Skeleton className="h-10 w-1/2 mb-8" />
+              <div className="mb-8 grid gap-4 md:grid-cols-3">
+                  <Skeleton className="h-28" />
+                  <Skeleton className="h-28" />
+                  <Skeleton className="h-28" />
+              </div>
+               <div className="grid gap-8 lg:grid-cols-3">
+                    <div className="lg:col-span-2 space-y-4">
+                        <Skeleton className="h-8 w-1/4" />
+                        <div className="grid gap-6 sm:grid-cols-2">
+                            <Skeleton className="h-60" />
+                            <Skeleton className="h-60" />
+                        </div>
+                    </div>
+                    <div className="space-y-8">
+                        <Skeleton className="h-40" />
+                        <Skeleton className="h-40" />
+                    </div>
+                </div>
+          </div>
+      )
+  }
+
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
         <h1 className="font-headline text-3xl font-bold">
-          Welcome back, {mockUser.name.split(" ")[0]}!
+          Welcome back, {session ? session.name.split(" ")[0] : 'Student'}!
         </h1>
         <p className="text-muted-foreground">
           Let&apos;s continue your learning journey.
@@ -131,19 +166,19 @@ export default function StudentDashboard() {
         <StatCard
           Icon={Sparkles}
           title="Total XP"
-          value={mockUser.stats.xp}
+          value={1250}
           color="text-accent"
         />
         <StatCard
           Icon={Flame}
           title="Day Streak"
-          value={mockUser.stats.streak}
+          value={14}
           color="text-red-500"
         />
         <StatCard
           Icon={Medal}
           title="Badges Earned"
-          value={mockUser.stats.badges}
+          value={3}
           color="text-blue-500"
         />
       </div>

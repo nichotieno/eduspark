@@ -1,15 +1,5 @@
 import { Book, Calculator, FlaskConical, Medal, Shield, Star, Trophy } from "lucide-react";
-
-export type User = {
-  id: string;
-  name: string;
-  avatarUrl: string;
-  stats: {
-    xp: number;
-    streak: number;
-    badges: number;
-  };
-};
+import { type User } from "@/lib/definitions";
 
 export type Badge = {
   id: string;
@@ -96,17 +86,6 @@ export type DailyAssignment = {
 
 
 // Mock Data
-export const mockUser: User = {
-  id: "user_1",
-  name: "Alex Doe",
-  avatarUrl: "https://placehold.co/100x100.png",
-  stats: {
-    xp: 1250,
-    streak: 14,
-    badges: 3,
-  },
-};
-
 export const mockBadges: Badge[] = [
   { id: 'b1', name: 'Math Beginner', description: 'Complete your first math lesson.', Icon: Star },
   { id: 'b2', name: 'Science Explorer', description: 'Complete your first science lesson.', Icon: Star },

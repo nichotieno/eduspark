@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -17,10 +18,10 @@ import { useToast } from "@/hooks/use-toast";
 import {
   mockDailyChallenge,
   mockChallengeComments,
-  mockUser,
   type ChallengeComment,
 } from "@/lib/mock-data";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { type SessionPayload } from "@/lib/session";
 
 export default function DailyChallengePage() {
   const [solution, setSolution] = useState("");
@@ -28,6 +29,18 @@ export default function DailyChallengePage() {
   const [comments, setComments] =
     useState<ChallengeComment[]>(mockChallengeComments);
   const { toast } = useToast();
+
+  const [session, setSession] = useState<SessionPayload | null>(null);
+
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => {
+        if (data.session) {
+          setSession(data.session);
+        }
+      });
+  }, []);
 
   const handleSolutionSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,13 +55,13 @@ export default function DailyChallengePage() {
 
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!comment.trim()) return;
+    if (!comment.trim() || !session) return;
 
     const newComment: ChallengeComment = {
       id: `c_${Date.now()}`,
       challengeId: mockDailyChallenge.id,
-      userName: mockUser.name,
-      userAvatarUrl: mockUser.avatarUrl,
+      userName: session.name,
+      userAvatarUrl: session.avatarUrl || "https://placehold.co/100x100.png",
       comment: comment.trim(),
       timestamp: "Just now",
     };
@@ -103,9 +116,9 @@ export default function DailyChallengePage() {
             <CardContent>
               <form onSubmit={handleCommentSubmit} className="mb-6 flex gap-4">
                 <Avatar>
-                  <AvatarImage src={mockUser.avatarUrl} alt={mockUser.name} data-ai-hint="person" />
+                  <AvatarImage src={session?.avatarUrl} alt={session?.name} data-ai-hint="person" />
                   <AvatarFallback>
-                    {mockUser.name
+                    {session?.name
                       .split(" ")
                       .map((n) => n[0])
                       .join("")}

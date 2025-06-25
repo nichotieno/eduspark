@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -6,9 +7,11 @@ import {
   Users,
   PanelLeft,
   Trophy,
+  LogOut,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { EduSparkLogo } from "@/components/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,7 +27,44 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { mockUser } from "@/lib/mock-data";
+import { logout } from "@/app/auth/actions";
+import { type SessionPayload } from "@/lib/session";
+import { Skeleton } from "@/components/ui/skeleton";
+
+
+const NavItem = ({ href, icon: Icon, label, pathname }: { href: string, icon: React.ElementType, label: string, pathname: string }) => (
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <Link
+        href={href}
+        className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors md:h-8 md:w-8 ${
+          pathname.startsWith(href)
+            ? "bg-accent text-accent-foreground"
+            : "text-muted-foreground hover:text-foreground"
+        }`}
+      >
+        <Icon className="h-5 w-5" />
+        <span className="sr-only">{label}</span>
+      </Link>
+    </TooltipTrigger>
+    <TooltipContent side="right">{label}</TooltipContent>
+  </Tooltip>
+);
+
+const MobileNavItem = ({ href, icon: Icon, label, pathname }: { href: string, icon: React.ElementType, label: string, pathname: string }) => (
+  <Link
+    href={href}
+    className={`flex items-center gap-4 px-2.5 ${
+      pathname.startsWith(href)
+        ? "text-foreground"
+        : "text-muted-foreground hover:text-foreground"
+    }`}
+  >
+    <Icon className="h-5 w-5" />
+    {label}
+  </Link>
+);
+
 
 export default function DashboardLayout({
   children,
@@ -32,13 +72,32 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [session, setSession] = useState<SessionPayload | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const navItems = [
+  useEffect(() => {
+    // Fetch session data from an API route
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => {
+        if (data.session) {
+          setSession(data.session);
+        }
+        setLoading(false);
+      }).catch(() => setLoading(false));
+  }, []);
+
+  const studentNavItems = [
     { href: "/dashboard/student", icon: Home, label: "Dashboard" },
     { href: "/dashboard/courses", icon: BookOpen, label: "Courses" },
     { href: "/dashboard/challenge", icon: Trophy, label: "Daily Challenge" },
-    { href: "/dashboard/teacher", icon: Users, label: "Teacher View" },
   ];
+
+  const teacherNavItems = [
+    { href: "/dashboard/teacher", icon: Users, label: "Teacher Dashboard" },
+  ];
+
+  const navItems = session?.role === 'teacher' ? teacherNavItems : studentNavItems;
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -53,26 +112,23 @@ export default function DashboardLayout({
           </Link>
           <TooltipProvider>
             {navItems.map((item) => (
-              <Tooltip key={item.href}>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={item.href}
-                    className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors md:h-8 md:w-8 ${
-                      pathname.startsWith(item.href)
-                        ? "bg-accent text-accent-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    <span className="sr-only">{item.label}</span>
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="right">{item.label}</TooltipContent>
-              </Tooltip>
+              <NavItem key={item.href} {...item} pathname={pathname} />
             ))}
           </TooltipProvider>
         </nav>
         <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
+           <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <form action={logout}>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 md:h-8 md:w-8 text-muted-foreground hover:text-foreground">
+                            <LogOut className="h-5 w-5" />
+                        </Button>
+                    </form>
+                </TooltipTrigger>
+                <TooltipContent side="right">Logout</TooltipContent>
+            </Tooltip>
+           </TooltipProvider>
         </nav>
       </aside>
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
@@ -94,37 +150,37 @@ export default function DashboardLayout({
                   <span className="sr-only">EduSpark</span>
                 </Link>
                 {navItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-4 px-2.5 ${
-                      pathname.startsWith(item.href)
-                        ? "text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    {item.label}
-                  </Link>
+                  <MobileNavItem key={item.href} {...item} pathname={pathname} />
                 ))}
+                <Separator className="my-2"/>
+                <form action={logout}>
+                    <button className="w-full flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                        <LogOut className="h-5 w-5" />
+                        Logout
+                    </button>
+                </form>
               </nav>
             </SheetContent>
           </Sheet>
           <div className="relative ml-auto flex-1 md:grow-0">
             {/* Can add a search bar here if needed */}
           </div>
-          <Avatar>
-            <AvatarImage src={mockUser.avatarUrl} alt={mockUser.name} data-ai-hint="person" />
-            <AvatarFallback>
-              {mockUser.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </AvatarFallback>
-          </Avatar>
+          {loading ? (
+             <Skeleton className="h-10 w-10 rounded-full" />
+          ) : session ? (
+            <Avatar>
+                <AvatarImage src={session.avatarUrl} alt={session.name} data-ai-hint="person" />
+                <AvatarFallback>
+                {session.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")}
+                </AvatarFallback>
+            </Avatar>
+          ) : null}
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-            {children}
+            {loading ? <div className="text-center p-8">Loading...</div> : children}
         </main>
       </div>
     </div>

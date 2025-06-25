@@ -7,6 +7,7 @@ import {
     mockLessons, 
     mockDailyAssignments
 } from '../src/lib/mock-data';
+import bcrypt from 'bcryptjs';
 
 async function seed() {
     console.log('Opening database...');
@@ -17,6 +18,17 @@ async function seed() {
 
     console.log('Running migrations...');
     await db.exec(`
+        -- Users Table
+        DROP TABLE IF EXISTS users;
+        CREATE TABLE users (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL,
+            role TEXT NOT NULL CHECK(role IN ('student', 'teacher')),
+            avatarUrl TEXT
+        );
+
         -- Courses Table
         DROP TABLE IF EXISTS courses;
         CREATE TABLE courses (
@@ -31,7 +43,7 @@ async function seed() {
             id TEXT PRIMARY KEY,
             courseId TEXT NOT NULL,
             title TEXT NOT NULL,
-            FOREIGN KEY(courseId) REFERENCES courses(id)
+            FOREIGN KEY(courseId) REFERENCES courses(id) ON DELETE CASCADE
         );
 
         -- Lessons Table
@@ -42,8 +54,8 @@ async function seed() {
             topicId TEXT NOT NULL,
             title TEXT NOT NULL,
             xp INTEGER NOT NULL,
-            FOREIGN KEY(courseId) REFERENCES courses(id),
-            FOREIGN KEY(topicId) REFERENCES topics(id)
+            FOREIGN KEY(courseId) REFERENCES courses(id) ON DELETE CASCADE,
+            FOREIGN KEY(topicId) REFERENCES topics(id) ON DELETE CASCADE
         );
         
         -- Lesson Steps Table
@@ -57,7 +69,7 @@ async function seed() {
             videoUrl TEXT,
             "data-ai-hint" TEXT,
             step_order INTEGER,
-            FOREIGN KEY(lessonId) REFERENCES lessons(id)
+            FOREIGN KEY(lessonId) REFERENCES lessons(id) ON DELETE CASCADE
         );
 
         -- Questions Table
@@ -73,7 +85,7 @@ async function seed() {
             image TEXT,
             "data-ai-hint" TEXT,
             question_order INTEGER,
-            FOREIGN KEY(lessonId) REFERENCES lessons(id)
+            FOREIGN KEY(lessonId) REFERENCES lessons(id) ON DELETE CASCADE
         );
 
         -- Assignments Table
@@ -87,6 +99,35 @@ async function seed() {
         );
     `);
     console.log('Migrations complete.');
+
+    // Seed Users
+    console.log('Seeding users...');
+    const users = [
+        { 
+            id: 'user_student_1', 
+            name: 'Alex Doe', 
+            email: 'student@example.com', 
+            password: 'password123', 
+            role: 'student', 
+            avatarUrl: 'https://placehold.co/100x100.png' 
+        },
+        { 
+            id: 'user_teacher_1', 
+            name: 'Prof. Ada', 
+            email: 'teacher@example.com', 
+            password: 'password123', 
+            role: 'teacher', 
+            avatarUrl: 'https://placehold.co/100x100.png'
+        }
+    ];
+    for (const user of users) {
+        const hashedPassword = await bcrypt.hash(user.password, 10);
+        await db.run(
+            'INSERT INTO users (id, name, email, password, role, avatarUrl) VALUES (?, ?, ?, ?, ?, ?)',
+            user.id, user.name, user.email, hashedPassword, user.role, user.avatarUrl
+        );
+    }
+    console.log('Users seeded.');
 
     // Seed Courses
     console.log('Seeding courses...');
