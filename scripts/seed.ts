@@ -106,6 +106,8 @@ async function seed() {
             userId TEXT NOT NULL,
             content TEXT NOT NULL,
             submittedAt TEXT NOT NULL,
+            grade INTEGER,
+            feedback TEXT,
             FOREIGN KEY(assignmentId) REFERENCES assignments(id) ON DELETE CASCADE,
             FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE,
             UNIQUE(assignmentId, userId)

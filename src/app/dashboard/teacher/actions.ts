@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -28,6 +29,13 @@ const AssignmentSchema = z.object({
   courseId: z.string(),
   dueDate: z.string().refine((d) => !isNaN(Date.parse(d)), 'Invalid date format.'),
 });
+
+const GradingSchema = z.object({
+  submissionId: z.string(),
+  grade: z.coerce.number().min(0, "Grade cannot be negative.").max(100, "Grade cannot exceed 100."),
+  feedback: z.string().optional(),
+});
+
 
 type FormState = {
   message: string;
@@ -192,4 +200,32 @@ export async function updateAssignment(assignmentId: string, prevState: FormStat
         console.error(e);
         return { success: false, message: 'Database error: Failed to update assignment.' };
     }
+}
+
+export async function gradeSubmission(prevState: FormState, formData: FormData): Promise<FormState> {
+  const validatedFields = GradingSchema.safeParse(Object.fromEntries(formData.entries()));
+  
+  if (!validatedFields.success) {
+    return { success: false, message: "Invalid data provided.", errors: validatedFields.error.flatten().fieldErrors };
+  }
+
+  const { submissionId, grade, feedback } = validatedFields.data;
+
+  try {
+    const db = await getDb();
+    const submission = await db.get('SELECT assignmentId FROM submissions WHERE id = ?', submissionId);
+    if (!submission) {
+      return { success: false, message: 'Submission not found.' };
+    }
+
+    await db.run('UPDATE submissions SET grade = ?, feedback = ? WHERE id = ?', grade, feedback, submissionId);
+    
+    revalidatePath(`/dashboard/teacher/assignments/${submission.assignmentId}`);
+    revalidatePath(`/dashboard/assignments/${submission.assignmentId}`); // Revalidate student view too
+    
+    return { success: true, message: 'Grade submitted successfully.' };
+  } catch (e) {
+    console.error(e);
+    return { success: false, message: 'Database error: Failed to submit grade.' };
+  }
 }

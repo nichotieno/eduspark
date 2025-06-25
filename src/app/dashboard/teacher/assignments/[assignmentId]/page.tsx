@@ -26,6 +26,8 @@ async function getAssignmentData(assignmentId: string) {
       s.assignmentId,
       s.content,
       s.submittedAt,
+      s.grade,
+      s.feedback,
       u.name as studentName,
       u.avatarUrl as studentAvatarUrl
     FROM submissions s

@@ -105,6 +105,8 @@ export type AssignmentSubmission = {
   submittedAt: string;
   studentName: string;
   studentAvatarUrl: string;
+  grade: number | null;
+  feedback: string | null;
 };
 
 export type ChallengeCommunitySubmission = {

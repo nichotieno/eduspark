@@ -16,14 +16,20 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { type DailyAssignment } from "@/lib/mock-data";
 import { format } from 'date-fns';
-import { ChevronLeft, Clock, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Clock, AlertCircle, Award, MessageSquareQuote } from 'lucide-react';
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { submitAssignment } from "../actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+type Submission = {
+  content: string;
+  grade: number | null;
+  feedback: string | null;
+};
+
 type AssignmentPageClientProps = {
     assignment: DailyAssignment;
-    submission: { content: string } | null;
+    submission: Submission | null;
 }
 
 const initialFormState = { message: '', success: false, errors: {} };
@@ -48,6 +54,7 @@ export function AssignmentPageClient({ assignment, submission }: AssignmentPageC
   
   const isSubmitted = !!submission || state.success;
   const isPastDue = new Date(assignment.dueDate) < new Date();
+  const isGraded = isSubmitted && submission?.grade !== null;
 
   useEffect(() => {
     if (state.success) {
@@ -76,7 +83,8 @@ export function AssignmentPageClient({ assignment, submission }: AssignmentPageC
                 <Clock className="h-4 w-4" />
                 <span>Due: {format(new Date(assignment.dueDate), 'PPP')}</span>
                  {isPastDue && !isSubmitted && <span className="ml-4 font-semibold text-destructive">(Past Due)</span>}
-                 {isSubmitted && <span className="ml-4 font-semibold text-green-600">(Submitted)</span>}
+                 {isSubmitted && !isGraded && <span className="ml-4 font-semibold text-yellow-600">(Submitted, Awaiting Grade)</span>}
+                 {isGraded && <span className="ml-4 font-semibold text-green-600">(Graded)</span>}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -86,6 +94,31 @@ export function AssignmentPageClient({ assignment, submission }: AssignmentPageC
             </p>
           </CardContent>
         </Card>
+        
+        {isGraded && (
+            <Card className="border-primary bg-primary/5">
+                <CardHeader>
+                    <CardTitle className="font-headline text-xl flex items-center gap-2">
+                        <Award className="h-6 w-6 text-primary" />
+                        Teacher Feedback
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div>
+                        <h4 className="font-semibold text-lg">Grade: {submission?.grade}/100</h4>
+                    </div>
+                     {submission?.feedback && (
+                        <div>
+                            <h4 className="font-semibold flex items-center gap-2 mb-2">
+                                <MessageSquareQuote className="h-5 w-5" />
+                                Comments
+                            </h4>
+                            <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: submission.feedback }} />
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        )}
 
         <Card>
           <CardHeader>
@@ -93,12 +126,10 @@ export function AssignmentPageClient({ assignment, submission }: AssignmentPageC
               {isSubmitted ? 'Your Submission' : 'Submit Your Answer'}
             </CardTitle>
             <CardDescription>
-                {isSubmitted 
-                    ? "You have already submitted your answer for this assignment."
-                    : isPastDue 
-                        ? "The due date has passed. Submissions are no longer accepted."
-                        : "Complete your work and submit it here. You cannot edit after submitting."
-                }
+                {isGraded && "This assignment has been graded. No further edits are possible."}
+                {!isGraded && isSubmitted && "You have already submitted your answer. You can see teacher feedback here once it's graded."}
+                {!isGraded && !isSubmitted && isPastDue && "The due date has passed. Submissions are no longer accepted."}
+                {!isGraded && !isSubmitted && !isPastDue && "Complete your work and submit it here. You cannot edit after submitting."}
             </CardDescription>
           </CardHeader>
            <form action={formAction}>

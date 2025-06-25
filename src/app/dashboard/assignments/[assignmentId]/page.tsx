@@ -26,8 +26,8 @@ export default async function AssignmentPage({ params }: { params: { assignmentI
     dueDate: new Date(assignmentData.dueDate),
   };
   
-  const submission = await db.get<{ content: string }>(
-      'SELECT content FROM submissions WHERE assignmentId = ? AND userId = ?',
+  const submission = await db.get<{ content: string, grade: number | null, feedback: string | null }>(
+      'SELECT content, grade, feedback FROM submissions WHERE assignmentId = ? AND userId = ?',
       assignmentId,
       session.id
   );
