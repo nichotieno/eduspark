@@ -7,9 +7,9 @@
 ## Table of Contents
 
 - [Overview](#overview)
-- [For Our Users](#for-our-users)
-  - [For Students](#for-students)
-  - [For Instructors](#for-instructors)
+- [For Our Users: Quick Start Guides](#for-our-users-quick-start-guides)
+  - [Student Quick Start Guide](#student-quick-start-guide)
+  - [Instructor Quick Start Guide](#instructor-quick-start-guide)
 - [For Developers & Maintainers](#for-developers--maintainers)
   - [Tech Stack](#tech-stack)
   - [Project Structure](#project-structure)
@@ -35,31 +35,99 @@ For instructors, EduSpark provides a powerful yet intuitive suite of tools to cr
 
 ---
 
-## For Our Users
+## For Our Users: Quick Start Guides
 
-### For Students
+### Student Quick Start Guide
 
-Welcome to a new way to learn!
+Welcome to a new way to learn! Here’s how to get started.
 
-*   **Interactive Courses:** Dive into subjects like Math and Science with lessons that are more than just text. Solve problems, get hints, and build confidence with hands-on activities.
-*   **Track Your Progress:** Earn Experience Points (XP) for every lesson you complete. Watch your total grow as you master new skills.
-*   **Build a Streak:** Stay motivated by maintaining a daily learning streak. Log in and complete a lesson each day to keep the flame alive!
-*   **Earn Badges:** Unlock achievements and earn badges for reaching milestones, like completing your first course or mastering a tough topic.
-*   **Daily Challenges:** Test your knowledge with a new STEM problem every day. Compete with your peers and discuss solutions in the community section.
-*   **Assignments:** Keep up with your coursework by viewing and submitting assignments directly through your dashboard.
+#### 1. Signing Up
+- Visit the [Sign Up](/signup) page.
+- Enter your name, email, and a password.
+- **Crucially, select the "Student" role.**
+- You'll be automatically logged in and redirected to your personal dashboard.
 
-**Getting Started:** Simply [Sign Up](/signup) as a student, and you'll be redirected to your personal dashboard to begin your learning journey.
+#### 2. Your Dashboard: Your Learning Hub
+Your dashboard is your central hub. Here you'll find:
+*   **Stats:** See your total Experience Points (XP), current learning streak, and earned badges at a glance.
+*   **Courses:** Browse all available courses. Click "View Course" to start one.
+*   **Continue Learning:** The AI-powered recommendation card shows you the best lesson to tackle next.
+*   **Assignments:** See a summary of how many assignments you need to complete.
 
-### For Instructors
+#### 3. Taking a Course
+- From the dashboard, click "View Course" on a course card (e.g., "Core Math").
+- You'll see a timeline of topics and lessons.
+- Lessons are unlocked sequentially. You must complete one lesson to unlock the next.
+- Click on any unlocked lesson to begin.
+
+#### 4. Completing a Lesson
+- **Learning Steps:** Progress through the learning materials first. These can include text, images, and videos.
+- **Quiz Time:** After the steps, you'll enter the quiz section.
+- **Answering:** Select an answer (for multiple-choice) or type it in (for fill-in-the-blank) and click "Check Answer."
+- **Hints:** If you're stuck, use the "Hint" button for a pre-written tip or the "AI Hint" button for a personalized hint from our AI Tutor.
+- **Completion:** Once you correctly answer all questions, the lesson is complete! You'll earn XP and see the AI recommendation for your next lesson.
+
+#### 5. Submitting Assignments
+- Navigate to the "Assignments" page using the sidebar.
+- The page is organized into tabs: "To Do," "Submitted," "Graded," and "Past Due."
+- Click on an assignment in the "To Do" list.
+- Read the problem, then use the rich text editor to write your solution.
+- Click "Submit Assignment." You cannot edit after submitting.
+- Check the "Graded" tab later to see your grade and the teacher's feedback.
+
+#### 6. The Daily Challenge
+- Navigate to the "Daily Challenge" page from the sidebar.
+- Each day, our AI generates a unique problem for you based on your recent learning.
+- You can post comments to discuss the problem with other students.
+- Submit your solution using the editor.
+- **After you submit, you'll be able to see and learn from the solutions posted by other students in the community!**
+
+---
+
+### Instructor Quick Start Guide
 
 Empowering you to create the best learning experiences.
 
-*   **Full Content Control:** Our intuitive dashboard allows you to create and manage your own courses, topics, and lessons from scratch.
-*   **Dynamic Lesson Builder:** Craft engaging lessons with a rich text editor, add learning steps with text, images, and videos, and create quizzes with multiple-choice or fill-in-the-blank questions.
-*   **Assignment Management:** Easily create, assign, and set due dates for daily or weekly assignments for your courses.
-*   **Student Progress Monitoring:** Get a high-level overview of your students' progress, see who is excelling, and identify who might need extra help. (More detailed analytics are on our roadmap!)
+#### 1. Signing Up
+- Visit the [Sign Up](/signup) page.
+- Enter your name, email, and a password.
+- **Crucially, select the "Teacher" role.**
+- You'll be automatically logged in and redirected to your Teacher Dashboard.
 
-**Getting Started:** [Sign Up](/signup) and select the "Teacher" role. You will be taken directly to your Teacher Dashboard where you can start building your first course.
+#### 2. Your Dashboard: Your Command Center
+The Teacher Dashboard is a tabbed interface for managing your classroom:
+*   **Overview:** Get high-level analytics, see course engagement charts, and receive actionable insights from your AI Teaching Assistant.
+*   **Student Progress:** View a list of all your students, their overall progress, and their last active date.
+*   **Course Management:** This is where you build and organize your curriculum.
+*   **Daily Assignments:** Create and manage assignments for your students.
+
+#### 3. Creating Your First Course
+- Go to the "Course Management" tab.
+- Click the "Create New Course" button.
+- Fill in a title and description, and save.
+- Your new course will appear in an accordion. Click on it to expand it.
+
+#### 4. Building a Lesson (Manually & with AI)
+1.  **Create a Topic:** Inside your course, click "Add New Topic" (e.g., "Algebra Basics").
+2.  **Create a Lesson:** Inside your new topic, click "Add New Lesson." Provide a title (e.g., "Solving Linear Equations") and an XP value. This will take you to the Lesson Builder.
+3.  **Populate Content:**
+    *   **With AI (Recommended for speed):** Click the **"Generate with AI"** button. The AI will use the lesson title to create a full draft of learning steps and quiz questions for you.
+    *   **Manually:** Click "Add Learning Step" to add text, images, or videos. Click "Add Quiz Question" to create multiple-choice questions.
+4.  **Review and Save:** Review all generated or manually created content, make any edits you see fit, and click "Save Changes."
+
+#### 5. Creating an Assignment
+- Go to the "Daily Assignments" tab.
+- Click "Create New Assignment."
+- Fill in the form: provide a title, a detailed problem description, associate it with one of your courses, and set a due date.
+- Click "Create Assignment." It will now be visible to students.
+
+#### 6. Grading Submissions
+- On the "Daily Assignments" tab, find the assignment you want to grade.
+- Click the "View Submissions" icon (looks like a group of people) on the assignment card.
+- This takes you to the Submissions page, where you'll see a list of all students who have submitted work.
+- Click on a student's submission to expand it and view their work.
+- Use the form to enter a grade (0-100) and provide written feedback.
+- Click "Save Grade." The student will now be able to see their grade and your comments.
 
 ---
 
