@@ -4,7 +4,7 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 import { getDb } from '@/lib/db';
 import { createSession } from '@/lib/session';
@@ -71,14 +71,13 @@ export async function login(
     }
 
   } catch (error) {
-    // If it's a redirect error, we need to re-throw it so Next.js can handle it.
     if ((error as any)?.digest?.startsWith('NEXT_REDIRECT')) {
       throw error;
     }
     
     console.error('Login Error:', error);
-    if ((error as any).code?.includes('SQLITE')) {
-        return { error: 'A database error occurred. Please try again later.' };
+    if (error instanceof Error && (error as any).code?.includes('SQLITE')) {
+        return { error: `Database Error: ${(error as any).message}. Please try again.` };
     }
     return { error: 'An unexpected error occurred. Please try again.' };
   }
@@ -109,7 +108,7 @@ export async function signup(
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const userId = crypto.randomUUID();
+    const userId = `user_${crypto.randomUUID()}`;
     const avatarUrl = `https://placehold.co/100x100.png`;
 
     await db.run(
@@ -126,14 +125,13 @@ export async function signup(
       redirect('/dashboard/student');
     }
   } catch (error) {
-    // If it's a redirect error, we need to re-throw it so Next.js can handle it.
     if ((error as any)?.digest?.startsWith('NEXT_REDIRECT')) {
       throw error;
     }
     
     console.error('Signup Error:', error);
-    if ((error as any).code?.includes('SQLITE')) {
-        return { error: 'A database error occurred during signup. Please try again.' };
+    if (error instanceof Error && (error as any).code?.includes('SQLITE')) {
+        return { error: `Database Error: ${(error as any).message}. Please try again.` };
     }
     return { error: 'An unexpected error occurred. Please try again.' };
   }
