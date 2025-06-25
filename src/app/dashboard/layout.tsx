@@ -30,6 +30,7 @@ import {
 import { logout } from "@/app/auth/actions";
 import { type SessionPayload } from "@/lib/session";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 
 
 const NavItem = ({ href, icon: Icon, label, pathname }: { href: string, icon: React.ElementType, label: string, pathname: string }) => (
