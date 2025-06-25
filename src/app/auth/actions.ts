@@ -71,7 +71,15 @@ export async function login(
     }
 
   } catch (error) {
-    console.error(error);
+    // If it's a redirect error, we need to re-throw it so Next.js can handle it.
+    if ((error as any)?.digest?.startsWith('NEXT_REDIRECT')) {
+      throw error;
+    }
+    
+    console.error('Login Error:', error);
+    if ((error as any).code?.includes('SQLITE')) {
+        return { error: 'A database error occurred. Please try again later.' };
+    }
     return { error: 'An unexpected error occurred. Please try again.' };
   }
 }
@@ -118,7 +126,15 @@ export async function signup(
       redirect('/dashboard/student');
     }
   } catch (error) {
-    console.error(error);
+    // If it's a redirect error, we need to re-throw it so Next.js can handle it.
+    if ((error as any)?.digest?.startsWith('NEXT_REDIRECT')) {
+      throw error;
+    }
+    
+    console.error('Signup Error:', error);
+    if ((error as any).code?.includes('SQLITE')) {
+        return { error: 'A database error occurred during signup. Please try again.' };
+    }
     return { error: 'An unexpected error occurred. Please try again.' };
   }
 }
