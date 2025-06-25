@@ -12,11 +12,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { type DailyAssignment } from "@/lib/mock-data";
 import { format } from 'date-fns';
 import { ChevronLeft, Clock } from 'lucide-react';
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 const getFromLocalStorage = (key: string, defaultValue: any) => {
     if (typeof window === 'undefined') return defaultValue;
@@ -139,11 +139,9 @@ export default function AssignmentPage() {
           </CardHeader>
            <form onSubmit={handleSolutionSubmit}>
             <CardContent>
-              <Textarea
-                placeholder="Type your answer and explain your work here..."
-                className="min-h-[200px]"
+              <RichTextEditor
                 value={solution}
-                onChange={(e) => setSolution(e.target.value)}
+                onChange={setSolution}
                 disabled={isPastDue || isSubmitted}
               />
             </CardContent>

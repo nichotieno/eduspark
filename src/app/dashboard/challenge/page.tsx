@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +20,7 @@ import {
   mockUser,
   type ChallengeComment,
 } from "@/lib/mock-data";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 export default function DailyChallengePage() {
   const [solution, setSolution] = useState("");
@@ -112,13 +112,8 @@ export default function DailyChallengePage() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="w-full">
-                  <Textarea
-                    placeholder="Add to the discussion..."
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    className="mb-2"
-                  />
-                  <Button type="submit" size="sm" disabled={!comment.trim()}>
+                   <RichTextEditor value={comment} onChange={setComment} />
+                  <Button type="submit" size="sm" disabled={!comment.trim()} className="mt-2">
                     Post Comment
                   </Button>
                 </div>
@@ -143,7 +138,10 @@ export default function DailyChallengePage() {
                           {c.timestamp}
                         </p>
                       </div>
-                      <p className="text-muted-foreground">{c.comment}</p>
+                      <div
+                        className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none"
+                        dangerouslySetInnerHTML={{ __html: c.comment }}
+                      />
                     </div>
                   </div>
                 ))}
@@ -164,11 +162,9 @@ export default function DailyChallengePage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSolutionSubmit}>
-                <Textarea
-                  placeholder="Describe your solution process and the final answer here..."
-                  className="min-h-[150px]"
-                  value={solution}
-                  onChange={(e) => setSolution(e.target.value)}
+                <RichTextEditor
+                    value={solution}
+                    onChange={setSolution}
                 />
               </form>
             </CardContent>
