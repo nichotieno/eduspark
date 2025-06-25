@@ -14,9 +14,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Flame, Medal, Sparkles, Clock, ChevronRight, BookOpen, Calculator, FlaskConical, Trophy } from "lucide-react";
+import { Flame, Medal, Sparkles, Clock, BookOpen, Calculator, FlaskConical, Trophy, ClipboardList } from "lucide-react";
 import Link from "next/link";
-import { formatDistanceToNow } from 'date-fns';
 import { type SessionPayload } from "@/lib/session";
 
 type StudentDashboardClientProps = {
@@ -27,7 +26,7 @@ type StudentDashboardClientProps = {
         badgesEarned: number;
     };
     courses: Omit<Course, 'Icon'>[];
-    assignments: DailyAssignment[];
+    assignmentsToDo: number;
     nextLesson: (Lesson & { course: Omit<Course, 'Icon'> }) | null;
 };
 
@@ -83,13 +82,12 @@ export function StudentDashboardClient({
     user,
     stats,
     courses,
-    assignments,
+    assignmentsToDo,
     nextLesson
 }: StudentDashboardClientProps) {
 
   const userBadges = stats.badgesEarned > 0 ? [{ id: 'b1', name: 'Math Beginner', Icon: Medal }] : [];
-  const activeAssignments = assignments;
-
+  
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
@@ -166,32 +164,20 @@ export function StudentDashboardClient({
             </div>
 
             <div>
-              <h2 className="mb-4 font-headline text-2xl font-bold">Active Assignments</h2>
+              <h2 className="mb-4 font-headline text-2xl font-bold">My Assignments</h2>
               <Card>
-                <CardContent className="pt-6">
-                  {activeAssignments.length > 0 ? (
-                    <div className="space-y-4">
-                      {activeAssignments.map((assignment) => (
-                        <Link href={`/dashboard/assignments/${assignment.id}`} key={assignment.id} className="block rounded-lg border bg-background p-4 transition-shadow hover:shadow-md hover:border-primary/50">
-                           <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="font-semibold">{assignment.title}</h3>
-                              <p className="mt-1 mb-2 text-sm text-muted-foreground">{assignment.problem}</p>
-                            </div>
-                             <ChevronRight className="h-5 w-5 text-muted-foreground mt-1 ml-4 flex-shrink-0" />
-                           </div>
-                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Clock className="h-3.5 w-3.5" />
-                                <span>Due {formatDistanceToNow(new Date(assignment.dueDate), { addSuffix: true })}</span>
-                           </div>
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center p-6 text-center">
-                        <p className="text-sm text-muted-foreground">No active assignments. Well done!</p>
-                    </div>
-                  )}
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <ClipboardList className="h-6 w-6" />
+                        <span>Overview</span>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+                    <p className="text-4xl font-bold">{assignmentsToDo}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Assignments to do</p>
+                     <Button className="mt-4 w-full" asChild>
+                        <Link href="/dashboard/assignments">View All Assignments</Link>
+                    </Button>
                 </CardContent>
               </Card>
             </div>

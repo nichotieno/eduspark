@@ -85,6 +85,15 @@ export type DailyAssignment = {
   dueDate: Date;
 };
 
+export type StudentAssignment = {
+  id: string;
+  title: string;
+  courseTitle: string;
+  dueDate: Date;
+  status: 'To Do' | 'Submitted' | 'Graded';
+  grade: number | null;
+};
+
 export type RecentSubmission = {
   id: string;
   submittedAt: string;

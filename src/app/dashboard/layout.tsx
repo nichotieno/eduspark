@@ -9,6 +9,7 @@ import {
   Trophy,
   LogOut,
   User as UserIcon,
+  ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -80,6 +81,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     const studentNavItems = [
         { href: "/dashboard/student", icon: Home, label: "Dashboard" },
         { href: "/dashboard/courses", icon: BookOpen, label: "Courses" },
+        { href: "/dashboard/assignments", icon: ClipboardList, label: "Assignments" },
         { href: "/dashboard/challenge", icon: Trophy, label: "Daily Challenge" },
         { href: "/dashboard/profile", icon: UserIcon, label: "Profile" },
     ];

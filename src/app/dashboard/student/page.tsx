@@ -72,16 +72,18 @@ export default async function StudentDashboardPage() {
     dayStreak = currentStreak;
   }
 
+  // Fetch count of assignments that are not submitted and not past due
+  const assignmentsToDoResult = await db.get<{ count: number }>(`
+    SELECT COUNT(a.id) as count
+    FROM assignments a
+    LEFT JOIN submissions s ON a.id = s.assignmentId AND s.userId = ?
+    WHERE s.id IS NULL AND a.dueDate >= ?
+  `, session.id, new Date().toISOString());
+  
+  const assignmentsToDo = assignmentsToDoResult?.count || 0;
+
   // Fetch other data
   const courses = await db.all<Omit<Course, 'Icon'>[]>("SELECT * FROM courses");
-  const assignmentsData = await db.all(
-    "SELECT * FROM assignments WHERE dueDate > ?",
-    new Date().toISOString()
-  );
-  const assignments = assignmentsData.map((a) => ({
-    ...a,
-    dueDate: new Date(a.dueDate),
-  }));
 
   // Logic to find the next lesson for the "Continue Learning" card
   const allLessons = await db.all<Lesson[]>('SELECT * FROM lessons ORDER BY id');
@@ -104,7 +106,7 @@ export default async function StudentDashboardPage() {
       user={session}
       stats={{ totalXp, dayStreak, badgesEarned }}
       courses={courses}
-      assignments={assignments}
+      assignmentsToDo={assignmentsToDo}
       nextLesson={nextLesson}
     />
   );
