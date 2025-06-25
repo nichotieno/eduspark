@@ -20,7 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Flame, Medal, Sparkles, Clock, Calculator, FlaskConical, BookOpen } from "lucide-react";
+import { Flame, Medal, Sparkles, Clock, Calculator, FlaskConical, BookOpen, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from 'date-fns';
 
@@ -192,14 +192,19 @@ export default function StudentDashboard() {
                   {activeAssignments.length > 0 ? (
                     <div className="space-y-4">
                       {activeAssignments.map((assignment) => (
-                        <div key={assignment.id} className="rounded-lg border bg-card p-4 transition-shadow hover:shadow-md">
-                           <h3 className="font-semibold">{assignment.title}</h3>
-                           <p className="mt-1 mb-3 text-sm text-muted-foreground">{assignment.problem}</p>
+                        <Link href={`/dashboard/assignments/${assignment.id}`} key={assignment.id} className="block rounded-lg border bg-background p-4 transition-shadow hover:shadow-md hover:border-primary/50">
+                           <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="font-semibold">{assignment.title}</h3>
+                              <p className="mt-1 mb-2 text-sm text-muted-foreground">{assignment.problem}</p>
+                            </div>
+                             <ChevronRight className="h-5 w-5 text-muted-foreground mt-1 ml-4 flex-shrink-0" />
+                           </div>
                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <Clock className="h-3.5 w-3.5" />
                                 <span>Due {formatDistanceToNow(new Date(assignment.dueDate), { addSuffix: true })}</span>
                            </div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   ) : (
