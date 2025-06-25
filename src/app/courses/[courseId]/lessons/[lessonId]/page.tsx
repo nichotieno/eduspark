@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 import { Lightbulb, X, Check, ChevronLeft, Award, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -40,6 +41,7 @@ export default function LessonPage() {
 
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [textAnswer, setTextAnswer] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const [showHint, setShowHint] = useState(false);
   const [lessonComplete, setLessonComplete] = useState(false);
@@ -93,6 +95,7 @@ export default function LessonPage() {
       setCurrentItemIndex(currentItemIndex - 1);
       if (isQuizPhase && currentQuestionIndex === 0) {
         setSelectedAnswer(null);
+        setTextAnswer("");
         setFeedback(null);
         setShowHint(false);
       }
@@ -116,12 +119,25 @@ export default function LessonPage() {
 
   const handleAnswerSelect = (option: string) => {
     if (feedback) return;
-    setSelectedAnswer(option);
+    if (question?.type === 'multiple-choice') {
+        setSelectedAnswer(option);
+    }
   };
+
+  const handleTextAnswerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (feedback) return;
+    setTextAnswer(e.target.value);
+    setSelectedAnswer(e.target.value);
+  }
 
   const checkAnswer = () => {
     if (!selectedAnswer || !question) return;
-    if (selectedAnswer === question.correctAnswer) {
+
+    const isCorrect = question.type === 'fill-in-the-blank'
+        ? selectedAnswer.trim().toLowerCase() === question.correctAnswer.toLowerCase()
+        : selectedAnswer === question.correctAnswer;
+
+    if (isCorrect) {
       setFeedback("correct");
     } else {
       setFeedback("incorrect");
@@ -130,6 +146,7 @@ export default function LessonPage() {
   
   const tryAgain = () => {
     setSelectedAnswer(null);
+    setTextAnswer("");
     setFeedback(null);
   }
 
@@ -137,6 +154,7 @@ export default function LessonPage() {
     if (hasQuestions && currentQuestionIndex < lesson.questions.length - 1) {
       setCurrentItemIndex(currentItemIndex + 1);
       setSelectedAnswer(null);
+      setTextAnswer("");
       setFeedback(null);
       setShowHint(false);
     } else {
@@ -233,7 +251,11 @@ export default function LessonPage() {
              <>
                 <CardHeader>
                     <CardTitle className="font-headline text-2xl">{question.text}</CardTitle>
-                    <CardDescription>Select the correct answer below.</CardDescription>
+                    <CardDescription>
+                        {question.type === 'multiple-choice' 
+                            ? 'Select the correct answer below.' 
+                            : 'Type your answer in the box below.'}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     {question.image && (
@@ -248,24 +270,45 @@ export default function LessonPage() {
                         />
                     </div>
                     )}
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {question.options.map((option) => (
-                        <Button
-                        key={option}
-                        variant="outline"
-                        size="lg"
-                        className={cn("h-auto justify-start p-4 text-left", {
-                            "border-primary ring-2 ring-primary": selectedAnswer === option,
-                            "border-green-500 bg-green-500/10 text-green-500": feedback === "correct" && option === question.correctAnswer,
-                            "border-red-500 bg-red-500/10 text-red-500": feedback === "incorrect" && selectedAnswer === option,
-                        })}
-                        onClick={() => handleAnswerSelect(option)}
-                        disabled={!!feedback}
-                        >
-                        {option}
-                        </Button>
-                    ))}
-                    </div>
+                    
+                    {question.type === 'multiple-choice' && (
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        {question.options.map((option) => (
+                            <Button
+                            key={option}
+                            variant="outline"
+                            size="lg"
+                            className={cn("h-auto justify-start p-4 text-left", {
+                                "border-primary ring-2 ring-primary": selectedAnswer === option,
+                                "border-green-500 bg-green-500/10 text-green-500": feedback === "correct" && option === question.correctAnswer,
+                                "border-red-500 bg-red-500/10 text-red-500": feedback === "incorrect" && selectedAnswer === option,
+                            })}
+                            onClick={() => handleAnswerSelect(option)}
+                            disabled={!!feedback}
+                            >
+                            {option}
+                            </Button>
+                        ))}
+                        </div>
+                    )}
+
+                    {question.type === 'fill-in-the-blank' && (
+                        <div className="flex flex-col items-center gap-4">
+                            <Input
+                                type="text"
+                                value={textAnswer}
+                                onChange={handleTextAnswerChange}
+                                placeholder="Your answer..."
+                                className={cn("max-w-sm text-center text-lg", {
+                                    "border-green-500 focus-visible:ring-green-500": feedback === "correct",
+                                    "border-red-500 focus-visible:ring-red-500": feedback === "incorrect",
+                                })}
+                                disabled={!!feedback}
+                                autoFocus
+                            />
+                        </div>
+                    )}
+
                     {showHint && (
                     <Alert className="mt-6">
                         <Lightbulb className="h-4 w-4" />

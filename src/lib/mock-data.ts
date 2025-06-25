@@ -53,7 +53,7 @@ export type Lesson = {
 export type Question = {
   id: string;
   text: string;
-  type: 'multiple-choice';
+  type: 'multiple-choice' | 'fill-in-the-blank';
   options: string[];
   correctAnswer: string;
   hint: string;
@@ -192,6 +192,14 @@ export const mockLessons: Lesson[] = [
         options: ["7", "10", "13", "2"],
         correctAnswer: "7",
         hint: "Substitute the value of y into the expression and perform the calculation.",
+      },
+      {
+        id: "m1q4",
+        text: "In algebra, a letter like 'x' that represents an unknown number is called a ____.",
+        type: 'fill-in-the-blank',
+        options: [],
+        correctAnswer: "variable",
+        hint: "It's something that can vary or change.",
       }
     ],
   },
@@ -385,6 +393,14 @@ export const mockLessons: Lesson[] = [
         options: ["Cell Membrane", "Mitochondria", "Nucleus", "Cell Wall"],
         correctAnswer: "Cell Wall",
         hint: "This rigid outer layer provides structural support to plant cells, fungi, and bacteria.",
+      },
+      {
+        id: "s2q5",
+        text: "The fluid-filled substance inside the cell membrane is called the ____.",
+        type: 'fill-in-the-blank',
+        options: [],
+        correctAnswer: "cytoplasm",
+        hint: "It's the jelly-like substance that holds all the cell's organelles.",
       }
     ],
   },
