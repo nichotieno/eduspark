@@ -98,6 +98,19 @@ async function seed() {
             dueDate TEXT NOT NULL
         );
 
+        -- Submissions Table
+        DROP TABLE IF EXISTS submissions;
+        CREATE TABLE submissions (
+            id TEXT PRIMARY KEY,
+            assignmentId TEXT NOT NULL,
+            userId TEXT NOT NULL,
+            content TEXT NOT NULL,
+            submittedAt TEXT NOT NULL,
+            FOREIGN KEY(assignmentId) REFERENCES assignments(id) ON DELETE CASCADE,
+            FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE(assignmentId, userId)
+        );
+
         -- User Progress Table (tracks completed lessons)
         DROP TABLE IF EXISTS user_progress;
         CREATE TABLE user_progress (

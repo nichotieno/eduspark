@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { Separator } from "@/components/ui/separator";
+import { useEffect } from "react";
 
 const Toolbar = ({ editor }: { editor: Editor | null }) => {
   if (!editor) {
@@ -23,7 +25,7 @@ const Toolbar = ({ editor }: { editor: Editor | null }) => {
   }
 
   return (
-    <div className="border-b border-input p-2 flex items-center gap-1 flex-wrap">
+    <div className="flex flex-wrap items-center gap-1 border-b border-input p-2">
       <Toggle
         size="sm"
         pressed={editor.isActive("bold")}
@@ -51,7 +53,7 @@ const Toolbar = ({ editor }: { editor: Editor | null }) => {
       >
         <Strikethrough className="h-4 w-4" />
       </Toggle>
-      <Separator orientation="vertical" className="h-8 mx-1" />
+      <Separator orientation="vertical" className="mx-1 h-8" />
       <Toggle
         size="sm"
         pressed={editor.isActive("heading", { level: 2 })}
@@ -60,7 +62,7 @@ const Toolbar = ({ editor }: { editor: Editor | null }) => {
       >
         <Heading2 className="h-4 w-4" />
       </Toggle>
-      <Separator orientation="vertical" className="h-8 mx-1" />
+      <Separator orientation="vertical" className="mx-1 h-8" />
       <Toggle
         size="sm"
         pressed={editor.isActive("bulletList")}
@@ -93,7 +95,7 @@ const Toolbar = ({ editor }: { editor: Editor | null }) => {
       >
         <Code className="h-4 w-4" />
       </Toggle>
-      <Separator orientation="vertical" className="h-8 mx-1" />
+      <Separator orientation="vertical" className="mx-1 h-8" />
        <Toggle
         size="sm"
         onPressedChange={() => editor.chain().focus().undo().run()}
@@ -118,10 +120,12 @@ export const RichTextEditor = ({
   value,
   onChange,
   disabled,
+  name,
 }: {
-  value: string;
-  onChange: (value: string) => void;
+  value?: string;
+  onChange?: (value: string) => void;
   disabled?: boolean;
+  name?: string;
 }) => {
   const editor = useEditor({
     extensions: [
@@ -134,7 +138,7 @@ export const RichTextEditor = ({
         }
       }),
     ],
-    content: value,
+    content: value || "",
     editorProps: {
       attributes: {
         class:
@@ -142,14 +146,32 @@ export const RichTextEditor = ({
       },
     },
     onUpdate({ editor }) {
-      onChange(editor.getHTML());
+      if (onChange) {
+        onChange(editor.getHTML());
+      }
     },
     editable: !disabled,
   });
 
+  // Handle external value changes
+  useEffect(() => {
+    if (editor && value !== undefined && editor.getHTML() !== value) {
+      editor.commands.setContent(value);
+    }
+  }, [value, editor]);
+
+  // Handle disabled state changes
+  useEffect(() => {
+    if (editor) {
+      editor.setEditable(!disabled);
+    }
+  }, [disabled, editor]);
+
+
   return (
     <div className="rounded-md border border-input bg-background ring-offset-background focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-      <Toolbar editor={editor} />
+      {!disabled && <Toolbar editor={editor} />}
+      {name && <input type="hidden" name={name} value={editor?.getHTML() || ''} />}
       <EditorContent editor={editor} className="[&_.ProseMirror]:min-h-[150px]" />
     </div>
   );

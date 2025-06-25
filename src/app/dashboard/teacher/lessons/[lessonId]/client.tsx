@@ -30,6 +30,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronLeft, Trash2, PlusCircle } from "lucide-react";
 import Link from "next/link";
+import { updateLesson } from "./actions";
 
 type LessonWithRelations = Lesson & {
     steps: LessonStep[];
@@ -41,6 +42,7 @@ export function LessonBuilderClient({ initialLesson }: { initialLesson: LessonWi
   const { toast } = useToast();
 
   const [lesson, setLesson] = useState<LessonWithRelations>(initialLesson);
+  const [isSaving, setIsSaving] = useState(false);
 
   const updateLessonField = (field: keyof Lesson, value: any) => {
     if (!lesson) return;
@@ -143,12 +145,21 @@ export function LessonBuilderClient({ initialLesson }: { initialLesson: LessonWi
     setLesson({ ...lesson, questions: newQuestions });
   };
 
-  const handleSaveChanges = () => {
-    toast({
-        variant: 'destructive',
-        title: "Action Disabled",
-        description: "Database modifications are not yet implemented.",
-    });
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+    const result = await updateLesson(lesson.id, JSON.stringify(lesson));
+    setIsSaving(false);
+
+    if (result.success) {
+      toast({ title: "Success!", description: result.message });
+      router.refresh();
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: result.message,
+      });
+    }
   };
 
   if (!lesson) {
@@ -168,7 +179,9 @@ export function LessonBuilderClient({ initialLesson }: { initialLesson: LessonWi
             Back to Dashboard
           </Link>
         </Button>
-        <Button onClick={handleSaveChanges}>Save Changes</Button>
+        <Button onClick={handleSaveChanges} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save Changes'}
+        </Button>
       </div>
 
       <Card className="mb-8">
