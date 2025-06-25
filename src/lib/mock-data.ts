@@ -25,18 +25,25 @@ export type Course = {
   Icon: React.ElementType;
 };
 
-export type LessonStep = {
+export type Topic = {
   id: string;
+  courseId: string;
+  title: string;
+};
+
+export type LessonStep = {
+  id:string;
   title: string;
   content: string;
   image?: string;
+  videoUrl?: string;
   "data-ai-hint"?: string;
 };
 
 export type Lesson = {
   id: string;
   courseId: string;
-  topic: string;
+  topicId: string;
   title: string;
   xp: number;
   steps: LessonStep[];
@@ -124,12 +131,19 @@ export const mockCourses: Course[] = [
   },
 ];
 
+export const mockTopics: Topic[] = [
+    { id: "topic_math_1", courseId: "math", title: "Algebra Foundations" },
+    { id: "topic_math_2", courseId: "math", title: "Geometric Principles" },
+    { id: "topic_science_1", courseId: "science", title: "Our Cosmic Neighborhood" },
+    { id: "topic_science_2", courseId: "science", title: "The Cellular World" },
+];
+
 export const mockLessons: Lesson[] = [
   // Math Lessons
   {
     id: "m1",
     courseId: "math",
-    topic: "Algebra Foundations",
+    topicId: "topic_math_1",
     title: "Introduction to Algebra",
     xp: 100,
     steps: [
@@ -144,8 +158,7 @@ export const mockLessons: Lesson[] = [
             id: 's2',
             title: 'Understanding Variables',
             content: "A variable, like 'x' or 'y', is a symbol that stands for a number we don't know yet. The goal is often to figure out the value of that variable.",
-            image: 'https://placehold.co/600x400.png',
-            'data-ai-hint': 'letter x'
+            videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
         },
         {
             id: 's3',
@@ -185,7 +198,7 @@ export const mockLessons: Lesson[] = [
   {
     id: "m2",
     courseId: "math",
-    topic: "Geometric Principles",
+    topicId: "topic_math_2",
     title: "Basics of Geometry",
     xp: 100,
     steps: [
@@ -250,7 +263,7 @@ export const mockLessons: Lesson[] = [
   {
     id: "s1",
     courseId: "science",
-    topic: "Our Cosmic Neighborhood",
+    topicId: "topic_science_1",
     title: "The Solar System",
     xp: 100,
     steps: [
@@ -314,7 +327,7 @@ export const mockLessons: Lesson[] = [
   {
     id: "s2",
     courseId: "science",
-    topic: "The Cellular World",
+    topicId: "topic_science_2",
     title: "Introduction to Cells",
     xp: 100,
     steps: [

@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { mockCourses, mockLessons, type Lesson } from "@/lib/mock-data";
+import {
+  mockCourses,
+  mockLessons,
+  mockTopics,
+  type Lesson,
+  type Topic,
+} from "@/lib/mock-data";
 import { notFound, useParams } from "next/navigation";
 import {
   Card,
@@ -19,6 +25,7 @@ export default function CoursePage() {
   const params = useParams();
   const course = mockCourses.find((c) => c.id === params.courseId);
   const lessons = mockLessons.filter((l) => l.courseId === params.courseId);
+  const topics = mockTopics.filter((t) => t.courseId === params.courseId);
 
   const [completedLessons, setCompletedLessons] = useState<
     Record<string, boolean>
@@ -42,16 +49,6 @@ export default function CoursePage() {
   if (!course) {
     notFound();
   }
-
-  const topics = lessons.reduce<Record<string, Lesson[]>>((acc, lesson) => {
-    const topic = lesson.topic;
-    if (!acc[topic]) {
-      acc[topic] = [];
-    }
-    acc[topic].push(lesson);
-    return acc;
-  }, {});
-  const topicNames = Object.keys(topics);
 
   const isLessonUnlocked = (lessonId: string): boolean => {
     const lessonIndex = lessons.findIndex((l) => l.id === lessonId);
@@ -82,14 +79,16 @@ export default function CoursePage() {
 
       <div className="relative w-full max-w-3xl mx-auto py-16">
         <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-border/50 -translate-x-1/2"></div>
-        {topicNames.map((topicName, index) => {
-          const lessonsInTopic = topics[topicName];
+        {topics.map((topic, index) => {
+          const lessonsInTopic = lessons.filter((l) => l.topicId === topic.id);
+          if (lessonsInTopic.length === 0) return null;
+
           const firstLessonOfTopic = lessonsInTopic[0];
           const topicUnlocked = isLessonUnlocked(firstLessonOfTopic.id);
 
           return (
             <div
-              key={topicName}
+              key={topic.id}
               className={cn(
                 "relative mb-16 flex items-start justify-center",
                 index % 2 !== 0 && "flex-row-reverse"
@@ -103,7 +102,7 @@ export default function CoursePage() {
                   )}
                 >
                   <CardHeader>
-                    <CardTitle className="font-headline text-xl">{topicName}</CardTitle>
+                    <CardTitle className="font-headline text-xl">{topic.title}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {lessonsInTopic.map((lesson) => {

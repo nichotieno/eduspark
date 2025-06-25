@@ -22,12 +22,20 @@ import { Progress } from "@/components/ui/progress";
 import {
   mockTeacherData,
   mockCourses as initialCourses,
+  mockTopics as initialTopics,
   mockDailyAssignments,
   type Course,
+  type Topic,
   type DailyAssignment,
 } from "@/lib/mock-data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -53,6 +61,7 @@ import {
   Trash2,
   BookOpen,
   CalendarIcon,
+  BookCopy,
 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -68,6 +77,13 @@ export default function TeacherDashboard() {
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [courseTitle, setCourseTitle] = useState("");
   const [courseDescription, setCourseDescription] = useState("");
+
+  // Topic State
+  const [topics, setTopics] = useState<Topic[]>(initialTopics);
+  const [isTopicDialogOpen, setIsTopicDialogOpen] = useState(false);
+  const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
+  const [topicTitle, setTopicTitle] = useState("");
+  const [currentCourseIdForTopic, setCurrentCourseIdForTopic] = useState<string | null>(null);
 
   // Assignment State
   const [assignments, setAssignments] =
@@ -96,9 +112,10 @@ export default function TeacherDashboard() {
 
   const handleDeleteCourse = (courseId: string) => {
     setCourses(courses.filter((c) => c.id !== courseId));
+    setTopics(topics.filter((t) => t.courseId !== courseId));
     toast({
       title: "Course Deleted",
-      description: "The course has been successfully removed.",
+      description: "The course and its topics have been removed.",
     });
   };
 
@@ -140,6 +157,59 @@ export default function TeacherDashboard() {
     }
     setIsCourseDialogOpen(false);
     setEditingCourse(null);
+  };
+
+  // Topic Handlers
+  const handleCreateNewTopic = (courseId: string) => {
+    setEditingTopic(null);
+    setTopicTitle("");
+    setCurrentCourseIdForTopic(courseId);
+    setIsTopicDialogOpen(true);
+  };
+
+  const handleEditTopic = (topic: Topic) => {
+    setEditingTopic(topic);
+    setTopicTitle(topic.title);
+    setCurrentCourseIdForTopic(topic.courseId);
+    setIsTopicDialogOpen(true);
+  };
+
+  const handleDeleteTopic = (topicId: string) => {
+    setTopics(topics.filter((t) => t.id !== topicId));
+    // Also need to handle deleting lessons associated with this topic later
+    toast({
+      title: "Topic Deleted",
+      description: "The topic has been removed from the course.",
+    });
+  };
+
+  const handleTopicFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!topicTitle.trim()) {
+       toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please provide a topic title.",
+      });
+      return;
+    }
+
+    if (editingTopic) {
+        setTopics(
+            topics.map((t) => t.id === editingTopic.id ? { ...t, title: topicTitle } : t)
+        );
+        toast({ title: "Topic Updated" });
+    } else if (currentCourseIdForTopic) {
+        const newTopic: Topic = {
+            id: `topic_${Date.now()}`,
+            courseId: currentCourseIdForTopic,
+            title: topicTitle,
+        };
+        setTopics([newTopic, ...topics]);
+        toast({ title: "Topic Created" });
+    }
+    setIsTopicDialogOpen(false);
+    setEditingTopic(null);
   };
 
   // Assignment Handlers
@@ -290,58 +360,106 @@ export default function TeacherDashboard() {
         </TabsContent>
         <TabsContent value="courses">
           <Card>
-            <CardHeader>
-              <CardTitle>Manage Courses</CardTitle>
-              <CardDescription>
-                Here you can create, edit, and delete your courses.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={handleCreateNewCourse}>
+            <CardHeader className="flex items-center justify-between">
+              <div>
+                <CardTitle>Manage Courses</CardTitle>
+                <CardDescription>
+                    Create new courses and manage topics for existing ones.
+                </CardDescription>
+              </div>
+               <Button onClick={handleCreateNewCourse}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Create New Course
               </Button>
-              <div className="mt-6 space-y-4">
+            </CardHeader>
+            <CardContent>
+               <Accordion type="single" collapsible className="w-full">
                 {courses.map((course) => (
-                  <Card
-                    key={course.id}
-                    className="transition-all hover:shadow-md"
-                  >
-                    <CardContent className="flex items-start justify-between p-4 md:items-center">
-                      <div className="flex flex-col gap-4 md:flex-row md:items-center">
-                        <div className="rounded-full bg-primary/10 p-3">
-                          <course.Icon className="h-6 w-6 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-semibold">{course.title}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {course.description}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEditCourse(course)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                          <span className="sr-only">Edit</span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => handleDeleteCourse(course.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                    <AccordionItem value={course.id} key={course.id}>
+                        <Card className="mb-2 border-0 shadow-none">
+                             <div className="flex items-center p-4">
+                                <AccordionTrigger className="flex-1 hover:no-underline">
+                                    <div className="flex items-center gap-4">
+                                        <div className="rounded-full bg-primary/10 p-3">
+                                            <course.Icon className="h-6 w-6 text-primary" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-left">{course.title}</p>
+                                            <p className="text-sm text-muted-foreground text-left">
+                                                {course.description}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </AccordionTrigger>
+                                <div className="flex shrink-0">
+                                    <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={(e) => { e.stopPropagation(); handleEditCourse(course); }}
+                                    >
+                                    <Pencil className="h-4 w-4" />
+                                    <span className="sr-only">Edit Course</span>
+                                    </Button>
+                                    <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-destructive hover:text-destructive"
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id);}}
+                                    >
+                                    <Trash2 className="h-4 w-4" />
+                                    <span className="sr-only">Delete Course</span>
+                                    </Button>
+                                </div>
+                             </div>
+                        </Card>
+                        <AccordionContent className="p-2 pl-8 pr-4">
+                            <div className="border-l pl-6">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h4 className="font-semibold">Topics</h4>
+                                    <Button variant="outline" size="sm" onClick={() => handleCreateNewTopic(course.id)}>
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        Add New Topic
+                                    </Button>
+                                </div>
+                                <div className="space-y-2">
+                                {topics.filter(t => t.courseId === course.id).map(topic => (
+                                    <Card key={topic.id} className="bg-muted/50">
+                                        <CardContent className="p-3 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                               <BookCopy className="h-4 w-4 text-muted-foreground" />
+                                               <p className="font-medium">{topic.title}</p>
+                                            </div>
+                                             <div className="flex shrink-0">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => handleEditTopic(topic)}
+                                                    >
+                                                    <Pencil className="h-4 w-4" />
+                                                    <span className="sr-only">Edit Topic</span>
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="text-destructive hover:text-destructive"
+                                                    onClick={() => handleDeleteTopic(topic.id)}
+                                                    >
+                                                    <Trash2 className="h-4 w-4" />
+                                                    <span className="sr-only">Delete Topic</span>
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                                {topics.filter(t => t.courseId === course.id).length === 0 && (
+                                    <p className="text-sm text-muted-foreground text-center py-4">No topics yet. Add one to get started!</p>
+                                )}
+                                </div>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
                 ))}
-              </div>
+              </Accordion>
             </CardContent>
           </Card>
         </TabsContent>
@@ -465,6 +583,48 @@ export default function TeacherDashboard() {
               </DialogClose>
               <Button type="submit">
                 {editingCourse ? "Save Changes" : "Create Course"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Topic Dialog */}
+      <Dialog open={isTopicDialogOpen} onOpenChange={setIsTopicDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingTopic ? "Edit Topic" : "Create New Topic"}
+            </DialogTitle>
+            <DialogDescription>
+              {editingTopic
+                ? "Update the topic title."
+                : "Enter the title for the new topic."}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleTopicFormSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="topic-title" className="text-right">
+                  Title
+                </Label>
+                <Input
+                  id="topic-title"
+                  value={topicTitle}
+                  onChange={(e) => setTopicTitle(e.target.value)}
+                  className="col-span-3"
+                  placeholder="e.g., Kinematics"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="secondary">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button type="submit">
+                {editingTopic ? "Save Changes" : "Create Topic"}
               </Button>
             </DialogFooter>
           </form>

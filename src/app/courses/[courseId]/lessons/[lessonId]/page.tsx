@@ -179,6 +179,11 @@ export default function LessonPage() {
                             />
                         </div>
                     )}
+                    {currentStep.videoUrl && (
+                        <div className="overflow-hidden rounded-lg border aspect-video">
+                            <video src={currentStep.videoUrl} controls className="w-full h-full" />
+                        </div>
+                    )}
                     <p className="text-muted-foreground leading-relaxed">{currentStep.content}</p>
                 </CardContent>
             </>
