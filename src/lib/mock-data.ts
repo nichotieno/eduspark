@@ -1,3 +1,4 @@
+
 import { Book, Calculator, FlaskConical, Medal, Shield, Star, Trophy } from "lucide-react";
 import { type User } from "@/lib/definitions";
 
@@ -400,20 +401,6 @@ export const mockTeacherData = {
         }
     ]
 };
-
-export const mockDailyChallenge: DailyChallenge = {
-    id: 'dc1',
-    date: '2024-07-29',
-    title: "The Traveling Salesperson's Lunch",
-    problem: 'A salesperson starts at city A, needs to visit cities B, C, and D exactly once, and then return to city A. The distances between the cities are as follows: A-B=10km, A-C=15km, A-D=20km, B-C=35km, B-D=25km, C-D=30km. What is the shortest possible route the salesperson can take?',
-    topic: 'Math',
-};
-
-export const mockChallengeComments: ChallengeComment[] = [
-    { id: 'cc1', challengeId: 'dc1', userName: 'Isaac N.', userAvatarUrl: 'https://placehold.co/100x100.png', comment: "This is a classic Traveling Salesperson Problem! You can list out all the possible paths and calculate the total distance for each.", timestamp: '2 hours ago' },
-    { id: 'cc2', challengeId: 'dc1', userName: 'Marie C.', userAvatarUrl: 'https://placehold.co/100x100.png', comment: 'I found a path that is 80km. Can anyone beat that? A -> B -> D -> C -> A.', timestamp: '1 hour ago' },
-    { id: 'cc3', challengeId: 'dc1', userName: 'Albert E.', userAvatarUrl: 'https://placehold.co/100x100.png', comment: 'Ah, I see! A -> D -> B -> C -> A is 100km. The order really matters!', timestamp: '30 mins ago' },
-];
 
 export const mockDailyAssignments: DailyAssignment[] = [
     {

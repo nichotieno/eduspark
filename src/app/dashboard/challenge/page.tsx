@@ -1,199 +1,54 @@
 
-"use client";
+import { getDb } from '@/lib/db';
+import { getSession } from '@/lib/session';
+import { redirect } from 'next/navigation';
+import { DailyChallengePageClient } from './client';
+import type { DailyChallenge, ChallengeComment } from '@/lib/mock-data';
+import type { User } from '@/lib/definitions';
 
-import React, { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import {
-  mockDailyChallenge,
-  mockChallengeComments,
-  type ChallengeComment,
-} from "@/lib/mock-data";
-import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import { type SessionPayload } from "@/lib/session";
 
-export default function DailyChallengePage() {
-  const [solution, setSolution] = useState("");
-  const [comment, setComment] = useState("");
-  const [comments, setComments] =
-    useState<ChallengeComment[]>(mockChallengeComments);
-  const { toast } = useToast();
+export default async function DailyChallengePage() {
+    const session = await getSession();
+    if (!session) {
+        redirect('/login');
+    }
 
-  const [session, setSession] = useState<SessionPayload | null>(null);
+    const db = await getDb();
+    
+    // For simplicity, get today's challenge. A real app might have more complex logic.
+    const challenge = await db.get<DailyChallenge>(
+        'SELECT * FROM challenges ORDER BY "date" DESC LIMIT 1'
+    );
+    
+    if (!challenge) {
+        return (
+            <div className="container mx-auto py-8 text-center">
+                <h1 className="font-headline text-3xl font-bold">No Daily Challenge Available</h1>
+                <p className="text-muted-foreground">Please check back later.</p>
+            </div>
+        )
+    }
 
-  useEffect(() => {
-    fetch('/api/auth/session')
-      .then(res => res.json())
-      .then(data => {
-        if (data.session) {
-          setSession(data.session);
-        }
-      });
-  }, []);
+    const comments = await db.all<ChallengeComment[]>(`
+        SELECT cc.id, cc.challengeId, cc.comment, cc.timestamp, u.name as userName, u.avatarUrl as userAvatarUrl
+        FROM challenge_comments cc
+        JOIN users u ON cc.userId = u.id
+        WHERE cc.challengeId = ?
+        ORDER BY cc.timestamp DESC
+    `, challenge.id);
 
-  const handleSolutionSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!solution.trim()) return;
-    console.log("Solution Submitted:", solution);
-    toast({
-      title: "Solution Submitted!",
-      description: "Thanks for tackling the daily challenge.",
-    });
-    setSolution("");
-  };
+    const submission = await db.get(
+        'SELECT id FROM challenge_submissions WHERE challengeId = ? AND userId = ?',
+        challenge.id,
+        session.id
+    );
 
-  const handleCommentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!comment.trim() || !session) return;
-
-    const newComment: ChallengeComment = {
-      id: `c_${Date.now()}`,
-      challengeId: mockDailyChallenge.id,
-      userName: session.name,
-      userAvatarUrl: session.avatarUrl || "https://placehold.co/100x100.png",
-      comment: comment.trim(),
-      timestamp: "Just now",
-    };
-
-    setComments([newComment, ...comments]);
-    setComment("");
-    toast({
-      title: "Comment Posted!",
-      description: "Your thoughts have been added to the discussion.",
-    });
-  };
-
-  return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8">
-        <h1 className="font-headline text-3xl font-bold">Daily Challenge</h1>
-        <p className="text-muted-foreground">
-          A new STEM problem every day to test your skills.
-        </p>
-      </div>
-
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="font-headline text-2xl">
-                  {mockDailyChallenge.title}
-                </CardTitle>
-                <Badge variant="secondary">{mockDailyChallenge.topic}</Badge>
-              </div>
-              <CardDescription>
-                Posted: {new Date(mockDailyChallenge.date).toLocaleDateString()}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground leading-relaxed">
-                {mockDailyChallenge.problem}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="mt-8">
-            <CardHeader>
-              <CardTitle className="font-headline text-xl">
-                Community Discussion
-              </CardTitle>
-              <CardDescription>
-                See what others are saying and share your thoughts.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleCommentSubmit} className="mb-6 flex gap-4">
-                <Avatar>
-                  <AvatarImage src={session?.avatarUrl} alt={session?.name} data-ai-hint="person" />
-                  <AvatarFallback>
-                    {session?.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="w-full">
-                   <RichTextEditor value={comment} onChange={setComment} />
-                  <Button type="submit" size="sm" disabled={!comment.trim()} className="mt-2">
-                    Post Comment
-                  </Button>
-                </div>
-              </form>
-              <Separator />
-              <div className="mt-6 space-y-6">
-                {comments.map((c) => (
-                  <div key={c.id} className="flex gap-4">
-                    <Avatar>
-                      <AvatarImage src={c.userAvatarUrl} alt={c.userName} data-ai-hint="person" />
-                      <AvatarFallback>
-                        {c.userName
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="w-full">
-                      <div className="flex items-center justify-between">
-                        <p className="font-semibold">{c.userName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {c.timestamp}
-                        </p>
-                      </div>
-                      <div
-                        className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none"
-                        dangerouslySetInnerHTML={{ __html: c.comment }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-headline text-xl">
-                Submit Your Solution
-              </CardTitle>
-              <CardDescription>
-                Once you think you have the answer, submit it here.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSolutionSubmit}>
-                <RichTextEditor
-                    value={solution}
-                    onChange={setSolution}
-                />
-              </form>
-            </CardContent>
-            <CardFooter>
-              <Button
-                type="submit"
-                className="w-full"
-                onClick={handleSolutionSubmit}
-                disabled={!solution.trim()}
-              >
-                Submit
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
+    return (
+        <DailyChallengePageClient
+            challenge={challenge}
+            initialComments={comments}
+            hasSubmitted={!!submission}
+            session={session}
+        />
+    );
 }

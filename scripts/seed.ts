@@ -5,9 +5,9 @@ import {
     mockCourses, 
     mockTopics, 
     mockLessons, 
-    mockDailyAssignments
 } from '../src/lib/mock-data';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 async function seed() {
     console.log('Opening database...');
@@ -141,6 +141,41 @@ async function seed() {
             PRIMARY KEY(userId, badgeId),
             FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE
         );
+
+        -- Daily Challenge Table
+        DROP TABLE IF EXISTS challenges;
+        CREATE TABLE challenges (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            problem TEXT NOT NULL,
+            topic TEXT NOT NULL,
+            "date" TEXT NOT NULL
+        );
+
+        -- Challenge Comments Table
+        DROP TABLE IF EXISTS challenge_comments;
+        CREATE TABLE challenge_comments (
+            id TEXT PRIMARY KEY,
+            challengeId TEXT NOT NULL,
+            userId TEXT NOT NULL,
+            comment TEXT NOT NULL,
+            timestamp TEXT NOT NULL,
+            FOREIGN KEY(challengeId) REFERENCES challenges(id) ON DELETE CASCADE,
+            FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        -- Challenge Submissions Table
+        DROP TABLE IF EXISTS challenge_submissions;
+        CREATE TABLE challenge_submissions (
+            id TEXT PRIMARY KEY,
+            challengeId TEXT NOT NULL,
+            userId TEXT NOT NULL,
+            content TEXT NOT NULL,
+            submittedAt TEXT NOT NULL,
+            FOREIGN KEY(challengeId) REFERENCES challenges(id) ON DELETE CASCADE,
+            FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE(challengeId, userId)
+        );
     `);
     console.log('Migrations complete.');
 
@@ -242,15 +277,11 @@ async function seed() {
 
     // Seed Assignments
     console.log('Seeding assignments...');
-    for (const assignment of mockDailyAssignments) {
-        await db.run('INSERT INTO assignments (id, title, problem, courseId, dueDate) VALUES (?, ?, ?, ?, ?)',
-            assignment.id,
-            assignment.title,
-            assignment.problem,
-            assignment.courseId,
-            assignment.dueDate.toISOString()
-        );
-    }
+    const assignmentDate = new Date();
+    assignmentDate.setDate(assignmentDate.getDate() + 2);
+    await db.run('INSERT INTO assignments (id, title, problem, courseId, dueDate) VALUES (?, ?, ?, ?, ?)',
+        'da1', 'Solving Linear Equations', 'Solve for x in the following equation: 3x - 7 = 14. Show your work.', 'math', assignmentDate.toISOString()
+    );
     console.log('Assignments seeded.');
     
     // Seed initial student progress for demonstration
@@ -265,6 +296,22 @@ async function seed() {
     await db.run('INSERT INTO user_streaks (userId, "date") VALUES (?, ?)', studentId, yesterday.toISOString().split('T')[0]);
     await db.run('INSERT INTO user_badges (userId, badgeId, earnedAt) VALUES (?, ?, ?)', studentId, 'b1', now.toISOString()); // Math Beginner badge
     console.log('Initial student progress seeded.');
+    
+    // Seed Challenges
+    console.log('Seeding challenges...');
+    await db.run('INSERT INTO challenges (id, title, problem, topic, "date") VALUES (?, ?, ?, ?, ?)',
+        'dc1',
+        "The Traveling Salesperson's Lunch",
+        'A salesperson starts at city A, needs to visit cities B, C, and D exactly once, and then return to city A. The distances are as follows: A-B=10km, A-C=15km, A-D=20km, B-C=35km, B-D=25km, C-D=30km. What is the shortest possible route the salesperson can take?',
+        'Math',
+        new Date().toISOString() // Set to today
+    );
+    console.log('Challenges seeded.');
+
+    // Seed Challenge Comments for demonstration
+    console.log('Seeding initial challenge comments...');
+    await db.run('INSERT INTO challenge_comments (id, challengeId, userId, comment, timestamp) VALUES (?, ?, ?, ?, ?)', `comment_${crypto.randomUUID()}`, 'dc1', studentId, 'This is a classic Traveling Salesperson Problem!', new Date().toISOString());
+    console.log('Initial challenge comments seeded.');
 
 
     console.log('Database seeded successfully!');
