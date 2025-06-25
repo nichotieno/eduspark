@@ -6,18 +6,18 @@ let db: Database | null = null;
 
 export async function getDb() {
   if (!db) {
-    // verbose provides more detailed stack traces in case of errors
-    const sqlite3Db = new sqlite3.Database('./local.db', sqlite3.OPEN_READWRITE, (err) => {
-      if (err) {
-        console.error("Failed to open the database", err.message);
-        console.log("Did you forget to run `npm run db:seed`?");
-      }
-    });
-
-    db = await open({
-      filename: './local.db',
-      driver: sqlite3.Database
-    });
+    // The `open` function from the `sqlite` package will create the database file if it does not exist,
+    // when the appropriate flags are passed. The library defaults to creating the file if it doesn't exist.
+    try {
+      db = await open({
+        filename: './local.db',
+        driver: sqlite3.Database
+      });
+    } catch (error) {
+       console.error("Failed to open the database", error);
+       console.log("Did you forget to run `npm run db:seed`? The database might not have been created yet.");
+       throw new Error("Failed to connect to the database.");
+    }
   }
   return db;
 }

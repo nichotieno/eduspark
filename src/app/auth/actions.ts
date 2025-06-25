@@ -34,7 +34,8 @@ export async function login(
   );
 
   if (!validatedFields.success) {
-    return { error: validatedFields.error.flatten().fieldErrors.toString() };
+    const errorMessages = Object.values(validatedFields.error.flatten().fieldErrors).flat();
+    return { error: errorMessages[0] || 'Invalid input.' };
   }
 
   const { email, password } = validatedFields.data;
@@ -88,8 +89,8 @@ export async function signup(
   );
 
   if (!validatedFields.success) {
-    const firstError = Object.values(validatedFields.error.flatten().fieldErrors)[0];
-    return { error: firstError ? firstError[0] : "Invalid input." };
+    const errorMessages = Object.values(validatedFields.error.flatten().fieldErrors).flat();
+    return { error: errorMessages[0] || 'Invalid input.' };
   }
 
   const { name, email, password, role } = validatedFields.data;
