@@ -98,6 +98,15 @@ export type CourseEnrollment = {
   enrolledStudents: number;
 };
 
+export type AssignmentSubmission = {
+  id: string;
+  assignmentId: string;
+  content: string;
+  submittedAt: string;
+  studentName: string;
+  studentAvatarUrl: string;
+};
+
 
 
 // Mock Data

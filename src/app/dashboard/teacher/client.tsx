@@ -607,7 +607,13 @@ export function TeacherDashboardClient({
                       <CardHeader>
                         <CardTitle className="flex items-center justify-between">
                           <span>{assignment.title}</span>
-                          <div className="flex shrink-0">
+                           <div className="flex shrink-0">
+                             <Button variant="ghost" size="icon" asChild>
+                              <Link href={`/dashboard/teacher/assignments/${assignment.id}`}>
+                                <Users className="h-4 w-4" />
+                                <span className="sr-only">View Submissions</span>
+                              </Link>
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
