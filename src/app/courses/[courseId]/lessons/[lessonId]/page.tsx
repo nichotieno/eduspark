@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { mockLessons } from "@/lib/mock-data";
+import { mockLessons, type Lesson } from "@/lib/mock-data";
 import { notFound, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,11 +21,21 @@ import Image from "next/image";
 
 export default function LessonPage() {
   const params = useParams();
-  const lesson = mockLessons.find((l) => l.id === params.lessonId);
+  const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [allLessons, setAllLessons] = useState<Lesson[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (!lesson) {
-    notFound();
-  }
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedLessons = localStorage.getItem("lessons");
+      const lessonsData = storedLessons ? JSON.parse(storedLessons) : mockLessons;
+      setAllLessons(lessonsData);
+      const currentLesson = lessonsData.find((l: Lesson) => l.id === params.lessonId);
+      setLesson(currentLesson ?? null);
+      setIsLoading(false);
+    }
+  }, [params.lessonId]);
+
 
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -33,6 +43,30 @@ export default function LessonPage() {
   const [showHint, setShowHint] = useState(false);
   const [lessonComplete, setLessonComplete] = useState(false);
   
+  useEffect(() => {
+    if (lessonComplete && lesson) {
+      try {
+        const completedLessons = JSON.parse(localStorage.getItem('completedLessons') || '{}');
+        completedLessons[lesson.id] = true;
+        localStorage.setItem('completedLessons', JSON.stringify(completedLessons));
+      } catch (error) {
+        console.error("Failed to update completed lessons in localStorage", error);
+      }
+    }
+  }, [lessonComplete, lesson]);
+  
+  if (isLoading) {
+      return (
+          <div className="flex h-screen items-center justify-center">
+            <p>Loading lesson...</p>
+          </div>
+      )
+  }
+
+  if (!lesson) {
+    notFound();
+  }
+
   const totalItems = (lesson.steps?.length || 0) + lesson.questions.length;
   const progress = ((currentItemIndex + 1) / totalItems) * 100;
   
@@ -42,19 +76,6 @@ export default function LessonPage() {
   const isQuizPhase = currentItemIndex >= (lesson.steps?.length || 0);
   const currentQuestionIndex = isQuizPhase ? currentItemIndex - (lesson.steps?.length || 0) : -1;
   const question = isQuizPhase ? lesson.questions[currentQuestionIndex] : null;
-
-  useEffect(() => {
-    if (lessonComplete) {
-      try {
-        const completedLessons = JSON.parse(localStorage.getItem('completedLessons') || '{}');
-        completedLessons[lesson.id] = true;
-        localStorage.setItem('completedLessons', JSON.stringify(completedLessons));
-      } catch (error) {
-        console.error("Failed to update completed lessons in localStorage", error);
-      }
-    }
-  }, [lessonComplete, lesson.id]);
-
 
   const handleBack = () => {
     if (currentItemIndex > 0) {
@@ -105,7 +126,7 @@ export default function LessonPage() {
   };
 
   if (lessonComplete) {
-    const courseLessons = mockLessons.filter(l => l.courseId === lesson.courseId);
+    const courseLessons = allLessons.filter(l => l.courseId === lesson.courseId);
     const currentLessonIndexInCourse = courseLessons.findIndex(l => l.id === lesson.id);
     const nextLesson = currentLessonIndexInCourse !== -1 && currentLessonIndexInCourse < courseLessons.length - 1 ? courseLessons[currentLessonIndexInCourse + 1] : null;
 

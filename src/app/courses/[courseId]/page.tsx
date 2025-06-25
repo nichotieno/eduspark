@@ -5,6 +5,7 @@ import {
   mockCourses,
   mockLessons,
   mockTopics,
+  type Course,
   type Lesson,
   type Topic,
 } from "@/lib/mock-data";
@@ -18,14 +19,33 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Circle, ChevronLeft, Lock, MapPin } from "lucide-react";
+import { CheckCircle, Circle, ChevronLeft, Lock, MapPin, Calculator, FlaskConical, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Helper to get data from localStorage
+const getFromLocalStorage = (key: string, defaultValue: any) => {
+  if (typeof window !== 'undefined') {
+    const saved = window.localStorage.getItem(key);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Parsing error from localStorage", e);
+        return defaultValue;
+      }
+    }
+  }
+  return defaultValue;
+};
+
 
 export default function CoursePage() {
   const params = useParams();
-  const course = mockCourses.find((c) => c.id === params.courseId);
-  const lessons = mockLessons.filter((l) => l.courseId === params.courseId);
-  const topics = mockTopics.filter((t) => t.courseId === params.courseId);
+
+  const [course, setCourse] = useState<Course | null>(null);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [completedLessons, setCompletedLessons] = useState<
     Record<string, boolean>
@@ -44,7 +64,33 @@ export default function CoursePage() {
       );
       setCompletedLessons({});
     }
-  }, []);
+
+    const allCourses = getFromLocalStorage("courses", mockCourses).map((c: any) => {
+        let IconComponent = BookOpen;
+        if (c.id === "math") IconComponent = Calculator;
+        else if (c.id === "science") IconComponent = FlaskConical;
+        return { ...c, Icon: IconComponent };
+    });
+    const allLessons = getFromLocalStorage('lessons', mockLessons);
+    const allTopics = getFromLocalStorage('topics', mockTopics);
+
+    const currentCourse = allCourses.find((c: Course) => c.id === params.courseId);
+
+    if(currentCourse) {
+        setCourse(currentCourse);
+        setLessons(allLessons.filter((l: Lesson) => l.courseId === params.courseId));
+        setTopics(allTopics.filter((t: Topic) => t.courseId === params.courseId));
+    }
+    setIsLoading(false);
+  }, [params.courseId]);
+
+  if (isLoading) {
+      return (
+          <div className="flex h-screen items-center justify-center">
+            <p>Loading course...</p>
+          </div>
+      )
+  }
 
   if (!course) {
     notFound();
