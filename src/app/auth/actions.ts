@@ -38,22 +38,32 @@ export async function login(
   }
 
   const { email, password } = validatedFields.data;
+  let user: User;
 
   try {
     const db = await getDb();
-    const user = await db.get<User>('SELECT * FROM users WHERE email = ?', email);
+    const dbUser = await db.get<User & { password: string }>('SELECT * FROM users WHERE email = ?', email);
 
-    if (!user) {
+    if (!dbUser) {
       return { error: 'Invalid email or password.' };
     }
 
-    const passwordsMatch = await bcrypt.compare(password, (user as any).password);
+    const passwordsMatch = await bcrypt.compare(password, dbUser.password);
 
     if (!passwordsMatch) {
       return { error: 'Invalid email or password.' };
     }
 
-    // Create session
+    // Create a user object for the session that does NOT include the password
+    user = {
+      id: dbUser.id,
+      name: dbUser.name,
+      email: dbUser.email,
+      role: dbUser.role,
+      avatarUrl: dbUser.avatarUrl,
+    };
+
+    // Create session with the clean user object
     await createSession(user);
 
   } catch (error) {
@@ -62,9 +72,7 @@ export async function login(
   }
   
   // Redirect based on role
-  const db = await getDb();
-  const user = await db.get<User>('SELECT * FROM users WHERE email = ?', email);
-  if (user?.role === 'teacher') {
+  if (user.role === 'teacher') {
       redirect('/dashboard/teacher');
   }
   redirect('/dashboard/student');
