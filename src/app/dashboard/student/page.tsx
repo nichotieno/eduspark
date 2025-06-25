@@ -1,9 +1,16 @@
+
+"use client";
+
+import { useState, useEffect } from "react";
 import {
   mockUser,
-  mockCourses,
+  mockCourses as initialCourses,
   mockBadges,
-  mockLessons,
-  mockDailyAssignments,
+  mockLessons as initialLessons,
+  mockDailyAssignments as initialAssignments,
+  type DailyAssignment,
+  type Course,
+  type Lesson,
 } from "@/lib/mock-data";
 import {
   Card,
@@ -13,9 +20,29 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Flame, Medal, Sparkles, Clock } from "lucide-react";
+import { Flame, Medal, Sparkles, Clock, Calculator, FlaskConical, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from 'date-fns';
+
+const getFromLocalStorage = (key: string, defaultValue: any) => {
+  if (typeof window === 'undefined') return defaultValue;
+  const saved = localStorage.getItem(key);
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      // When loading assignments, ensure the dueDate string is converted back to a Date object.
+      if (key === 'assignments') {
+        return parsed.map((a: any) => ({ ...a, dueDate: new Date(a.dueDate) }));
+      }
+      return parsed;
+    } catch (e) {
+      console.error(`Parsing error from localStorage for key "${key}"`, e);
+      return defaultValue;
+    }
+  }
+  return defaultValue;
+};
+
 
 const StatCard = ({
   Icon,
@@ -42,12 +69,7 @@ const StatCard = ({
 const CourseCard = ({
   course,
 }: {
-  course: {
-    id: string;
-    title: string;
-    description: string;
-    Icon: React.ElementType;
-  };
+  course: Course,
 }) => (
   <Card>
     <CardHeader>
@@ -68,13 +90,30 @@ const CourseCard = ({
 );
 
 export default function StudentDashboard() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [assignments, setAssignments] = useState<DailyAssignment[]>([]);
+
+  useEffect(() => {
+    const savedCourses = getFromLocalStorage('courses', initialCourses).map((c: any) => {
+        let IconComponent = BookOpen;
+        if (c.id === "math") IconComponent = Calculator;
+        else if (c.id === "science") IconComponent = FlaskConical;
+        return { ...c, Icon: IconComponent };
+    });
+    setCourses(savedCourses);
+    setLessons(getFromLocalStorage('lessons', initialLessons));
+    setAssignments(getFromLocalStorage('assignments', initialAssignments));
+  }, []);
+
+
   const userBadges = mockBadges.slice(0, mockUser.stats.badges);
-  const firstLesson = mockLessons[0];
-  const firstCourse = mockCourses.find(c => c.id === firstLesson.courseId);
+  const firstLesson = lessons.length > 0 ? lessons[0] : null;
+  const firstCourse = firstLesson ? courses.find(c => c.id === firstLesson.courseId) : null;
 
   const now = new Date();
-  const activeAssignments = mockDailyAssignments.filter(
-    (assignment) => assignment.dueDate > now
+  const activeAssignments = assignments.filter(
+    (assignment) => new Date(assignment.dueDate) > now
   );
 
   return (
@@ -113,7 +152,7 @@ export default function StudentDashboard() {
         <div className="lg:col-span-2">
           <h2 className="mb-4 font-headline text-2xl font-bold">Courses</h2>
           <div className="grid gap-6 sm:grid-cols-2">
-            {mockCourses.map((course) => (
+            {courses.map((course) => (
               <CourseCard key={course.id} course={course} />
             ))}
           </div>
@@ -122,7 +161,7 @@ export default function StudentDashboard() {
         <div className="space-y-8">
             <div>
                 <h2 className="mb-4 font-headline text-2xl font-bold">Continue Learning</h2>
-                 {firstLesson && firstCourse && (
+                 {firstLesson && firstCourse ? (
                     <Card>
                         <CardHeader>
                             <CardTitle>{firstLesson.title}</CardTitle>
@@ -137,6 +176,12 @@ export default function StudentDashboard() {
                             </Button>
                         </CardContent>
                     </Card>
+                ) : (
+                  <Card>
+                    <CardContent className="flex items-center justify-center p-6 text-center">
+                      <p className="text-sm text-muted-foreground">Start a course to begin your journey!</p>
+                    </CardContent>
+                  </Card>
                 )}
             </div>
 
@@ -152,7 +197,7 @@ export default function StudentDashboard() {
                            <p className="mt-1 mb-3 text-sm text-muted-foreground">{assignment.problem}</p>
                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <Clock className="h-3.5 w-3.5" />
-                                <span>Due {formatDistanceToNow(assignment.dueDate, { addSuffix: true })}</span>
+                                <span>Due {formatDistanceToNow(new Date(assignment.dueDate), { addSuffix: true })}</span>
                            </div>
                         </div>
                       ))}
