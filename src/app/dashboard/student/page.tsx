@@ -3,6 +3,7 @@ import {
   mockCourses,
   mockBadges,
   mockLessons,
+  mockDailyAssignments,
 } from "@/lib/mock-data";
 import {
   Card,
@@ -12,8 +13,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Flame, Medal, Sparkles } from "lucide-react";
+import { Flame, Medal, Sparkles, Clock } from "lucide-react";
 import Link from "next/link";
+import { formatDistanceToNow } from 'date-fns';
 
 const StatCard = ({
   Icon,
@@ -69,6 +71,11 @@ export default function StudentDashboard() {
   const userBadges = mockBadges.slice(0, mockUser.stats.badges);
   const firstLesson = mockLessons[0];
   const firstCourse = mockCourses.find(c => c.id === firstLesson.courseId);
+
+  const now = new Date();
+  const activeAssignments = mockDailyAssignments.filter(
+    (assignment) => assignment.dueDate > now
+  );
 
   return (
     <div className="container mx-auto py-8">
@@ -132,6 +139,33 @@ export default function StudentDashboard() {
                     </Card>
                 )}
             </div>
+
+            <div>
+              <h2 className="mb-4 font-headline text-2xl font-bold">Active Assignments</h2>
+              <Card>
+                <CardContent className="pt-6">
+                  {activeAssignments.length > 0 ? (
+                    <div className="space-y-4">
+                      {activeAssignments.map((assignment) => (
+                        <div key={assignment.id} className="rounded-lg border bg-card p-4 transition-shadow hover:shadow-md">
+                           <h3 className="font-semibold">{assignment.title}</h3>
+                           <p className="mt-1 mb-3 text-sm text-muted-foreground">{assignment.problem}</p>
+                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Clock className="h-3.5 w-3.5" />
+                                <span>Due {formatDistanceToNow(assignment.dueDate, { addSuffix: true })}</span>
+                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center p-6 text-center">
+                        <p className="text-sm text-muted-foreground">No active assignments. Well done!</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
             <div>
             <h2 className="mb-4 font-headline text-2xl font-bold">My Badges</h2>
             <Card>

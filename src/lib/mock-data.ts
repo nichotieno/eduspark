@@ -422,4 +422,11 @@ export const mockDailyAssignments: DailyAssignment[] = [
       courseId: 'science',
       dueDate: new Date(new Date().setDate(new Date().getDate() + 5)),
     },
+    {
+        id: 'da3',
+        title: 'Past Due: Pythagorean Theorem',
+        problem: 'This assignment was due yesterday and should not be visible to students.',
+        courseId: 'math',
+        dueDate: new Date(new Date().setDate(new Date().getDate() - 1)),
+    },
   ];
