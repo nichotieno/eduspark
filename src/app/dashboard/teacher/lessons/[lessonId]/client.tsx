@@ -28,9 +28,9 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { ChevronLeft, Trash2, PlusCircle } from "lucide-react";
+import { ChevronLeft, Trash2, PlusCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { updateLesson } from "./actions";
+import { updateLesson, generateLessonContentAction } from "./actions";
 
 type LessonWithRelations = Lesson & {
     steps: LessonStep[];
@@ -43,6 +43,7 @@ export function LessonBuilderClient({ initialLesson }: { initialLesson: LessonWi
 
   const [lesson, setLesson] = useState<LessonWithRelations>(initialLesson);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const updateLessonField = (field: keyof Lesson, value: any) => {
     if (!lesson) return;
@@ -145,6 +146,54 @@ export function LessonBuilderClient({ initialLesson }: { initialLesson: LessonWi
     setLesson({ ...lesson, questions: newQuestions });
   };
 
+  const handleGenerateContent = async () => {
+    if (!lesson.title) {
+        toast({
+            variant: "destructive",
+            title: "Cannot Generate",
+            description: "Please provide a lesson title before generating content.",
+        });
+        return;
+    }
+
+    if (lesson.steps.length > 0 || lesson.questions.length > 0) {
+        if (!confirm("This will replace all existing steps and questions with AI-generated content. Are you sure?")) {
+            return;
+        }
+    }
+    
+    setIsGenerating(true);
+    try {
+        const result = await generateLessonContentAction(lesson.title);
+        if (result.success && result.data) {
+            setLesson(prevLesson => ({
+                ...prevLesson,
+                steps: result.data.steps.map((step, i) => ({ 
+                    ...step,
+                    id: `step_${Date.now()}_${i}`,
+                    image: undefined,
+                    videoUrl: undefined,
+                    'data-ai-hint': undefined,
+                })),
+                questions: result.data.questions.map((q, i) => ({
+                    ...q,
+                    id: `q_${Date.now()}_${i}`,
+                    image: undefined,
+                    'data-ai-hint': undefined,
+                })),
+            }));
+            toast({ title: 'Content Generated!', description: 'AI has populated the lesson. Please review and save.' });
+        } else {
+            toast({ variant: 'destructive', title: 'Generation Failed', description: result.message || 'An unknown error occurred.' });
+        }
+    } catch(e) {
+        toast({ variant: 'destructive', title: 'Error', description: 'An unexpected error occurred.' });
+    } finally {
+        setIsGenerating(false);
+    }
+  };
+
+
   const handleSaveChanges = async () => {
     setIsSaving(true);
     const result = await updateLesson(lesson.id, JSON.stringify(lesson));
@@ -172,16 +221,22 @@ export function LessonBuilderClient({ initialLesson }: { initialLesson: LessonWi
 
   return (
     <div className="container mx-auto max-w-4xl py-8">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between gap-4">
         <Button variant="ghost" asChild>
           <Link href="/dashboard/teacher">
             <ChevronLeft className="mr-2 h-4 w-4" />
             Back to Dashboard
           </Link>
         </Button>
-        <Button onClick={handleSaveChanges} disabled={isSaving}>
-            {isSaving ? 'Saving...' : 'Save Changes'}
-        </Button>
+        <div className="flex gap-2">
+            <Button onClick={handleGenerateContent} disabled={isGenerating || isSaving} variant="outline">
+                <Sparkles className="mr-2 h-4 w-4" />
+                {isGenerating ? 'Generating...' : 'Generate with AI'}
+            </Button>
+            <Button onClick={handleSaveChanges} disabled={isSaving || isGenerating}>
+                {isSaving ? 'Saving...' : 'Save Changes'}
+            </Button>
+        </div>
       </div>
 
       <Card className="mb-8">

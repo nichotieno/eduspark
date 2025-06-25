@@ -4,14 +4,15 @@
 import { z } from 'zod';
 import { getDb } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { generateLessonContent } from '@/ai/flows/generate-lesson-content-flow';
 
 // Schemas for validation
 const LessonStepSchema = z.object({
   id: z.string(),
   title: z.string().min(1, "Step title cannot be empty."),
   content: z.string().optional().default(""),
-  image: z.string().optional().nullable(),
-  videoUrl: z.string().optional().nullable(),
+  image: z.string().url().optional().nullable(),
+  videoUrl: z.string().url().optional().nullable(),
   'data-ai-hint': z.string().optional().nullable(),
 });
 
@@ -22,7 +23,7 @@ const QuestionSchema = z.object({
   options: z.array(z.string()),
   correctAnswer: z.string(),
   hint: z.string().optional().default(""),
-  image: z.string().optional().nullable(),
+  image: z.string().url().optional().nullable(),
   'data-ai-hint': z.string().optional().nullable(),
 });
 
@@ -76,5 +77,18 @@ export async function updateLesson(lessonId: string, lessonDataJSON: string) {
         await db.run('ROLLBACK');
         console.error("Failed to update lesson:", error);
         return { success: false, message: 'A database error occurred while saving.' };
+    }
+}
+
+export async function generateLessonContentAction(lessonTitle: string) {
+    if (!lessonTitle) {
+        return { success: false, message: 'Lesson title cannot be empty.' };
+    }
+    try {
+        const generatedData = await generateLessonContent({ title: lessonTitle });
+        return { success: true, data: generatedData };
+    } catch (error) {
+        console.error("Failed to generate lesson content:", error);
+        return { success: false, message: 'An AI error occurred while generating content.' };
     }
 }
