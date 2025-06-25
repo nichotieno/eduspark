@@ -15,19 +15,21 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import { Lightbulb, X, Check, ChevronLeft, Award, ChevronRight, Sparkles } from "lucide-react";
+import { Lightbulb, X, Check, ChevronLeft, Award, ChevronRight, Sparkles, BrainCircuit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
-import { completeLesson, getTutorHintAction } from "@/app/courses/actions";
+import { completeLesson, getTutorHintAction, recordQuestionAnswerAction } from "@/app/courses/actions";
 import { useToast } from "@/hooks/use-toast";
+
+type RecommendedLesson = (Lesson & { course: Omit<Course, 'Icon'>, reasoning: string })
 
 type LessonPageClientProps = {
     initialLesson: Lesson;
-    allCourseLessons: Lesson[];
+    nextRecommendedLesson: RecommendedLesson | null;
 };
 
-export function LessonPageClient({ initialLesson, allCourseLessons }: LessonPageClientProps) {
+export function LessonPageClient({ initialLesson, nextRecommendedLesson }: LessonPageClientProps) {
   const { toast } = useToast();
   const [lesson] = useState<Lesson>(initialLesson);
 
@@ -128,6 +130,14 @@ export function LessonPageClient({ initialLesson, allCourseLessons }: LessonPage
     } else {
       setFeedback("incorrect");
     }
+    
+    // Record the answer for personalization
+    recordQuestionAnswerAction({
+      lessonId: lesson.id,
+      questionId: question.id,
+      answer: selectedAnswer,
+      isCorrect: isCorrect,
+    });
   };
   
   const tryAgain = () => {
@@ -174,12 +184,9 @@ export function LessonPageClient({ initialLesson, allCourseLessons }: LessonPage
   };
 
   if (lessonComplete) {
-    const currentLessonIndexInCourse = allCourseLessons.findIndex(l => l.id === lesson.id);
-    const nextLesson = currentLessonIndexInCourse !== -1 && currentLessonIndexInCourse < allCourseLessons.length - 1 ? allCourseLessons[currentLessonIndexInCourse + 1] : null;
-
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
-            <Card className="w-full max-w-md animate-in fade-in-50 zoom-in-90 text-center shadow-2xl">
+            <Card className="w-full max-w-lg animate-in fade-in-50 zoom-in-90 text-center shadow-2xl">
                 <CardHeader>
                     <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
                         <Award className="h-12 w-12 text-green-500" />
@@ -188,12 +195,20 @@ export function LessonPageClient({ initialLesson, allCourseLessons }: LessonPage
                     <CardDescription>You earned {lesson.xp} XP.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-muted-foreground">Great job on finishing "{lesson.title}". Keep up the momentum!</p>
+                    {nextRecommendedLesson ? (
+                         <Alert className="text-left">
+                            <BrainCircuit className="h-4 w-4" />
+                            <AlertTitle>Up Next: {nextRecommendedLesson.title}</AlertTitle>
+                            <AlertDescription>{nextRecommendedLesson.reasoning}</AlertDescription>
+                        </Alert>
+                    ) : (
+                        <p className="text-muted-foreground">You've finished all the lessons. Amazing work!</p>
+                    )}
                 </CardContent>
                 <CardFooter className="flex flex-col gap-2">
-                    {nextLesson ? (
+                    {nextRecommendedLesson ? (
                         <Button className="w-full" asChild>
-                            <Link href={`/courses/${nextLesson.courseId}/lessons/${nextLesson.id}`}>Next Lesson</Link>
+                            <Link href={`/courses/${nextRecommendedLesson.courseId}/lessons/${nextRecommendedLesson.id}`}>Next Lesson</Link>
                         </Button>
                     ) : (
                          <Button className="w-full" asChild>

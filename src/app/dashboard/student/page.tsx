@@ -8,6 +8,7 @@ import {
   type Lesson,
 } from "@/lib/mock-data";
 import { StudentDashboardClient } from "./client";
+import { generateNextLessonRecommendation } from "@/ai/flows/generate-next-lesson-recommendation-flow";
 
 
 export default async function StudentDashboardPage() {
@@ -85,21 +86,29 @@ export default async function StudentDashboardPage() {
   // Fetch other data
   const courses = await db.all<Omit<Course, 'Icon'>[]>("SELECT * FROM courses");
 
-  // Logic to find the next lesson for the "Continue Learning" card
-  const allLessons = await db.all<Lesson[]>('SELECT * FROM lessons ORDER BY id');
-  const userProgress = await db.all<{ lessonId: string }>('SELECT lessonId FROM user_progress WHERE userId = ?', session.id);
-  const completedLessonIds = new Set(userProgress.map(p => p.lessonId));
+  // AI-powered "Continue Learning" card
+  let recommendedLesson: (Lesson & { course: Omit<Course, 'Icon'>, reasoning: string }) | null = null;
+  try {
+    const recommendation = await generateNextLessonRecommendation({ userId: session.id });
+    if (recommendation.lessonId && recommendation.courseId) {
+        const recommendedLessonData = await db.get<Lesson>('SELECT * FROM lessons WHERE id = ?', recommendation.lessonId);
+        const courseData = await db.get<Omit<Course, 'Icon'>>('SELECT * FROM courses WHERE id = ?', recommendation.courseId);
 
-  let nextLesson: (Lesson & { course: Omit<Course, 'Icon'> }) | null = null;
-  for (const lesson of allLessons) {
-      if (!completedLessonIds.has(lesson.id)) {
-          const courseForLesson = courses.find(c => c.id === lesson.courseId);
-          if (courseForLesson) {
-              nextLesson = { ...lesson, course: courseForLesson };
-          }
-          break;
-      }
+        if (recommendedLessonData && courseData) {
+            recommendedLesson = {
+                ...recommendedLessonData,
+                course: courseData,
+                reasoning: recommendation.reasoning,
+                steps: [], // not needed for this view
+                questions: [], // not needed for this view
+            };
+        }
+    }
+  } catch(e) {
+      console.error("Failed to generate lesson recommendation for dashboard:", e);
+      // Fail gracefully, card will show completion state.
   }
+
 
   return (
     <StudentDashboardClient
@@ -107,7 +116,7 @@ export default async function StudentDashboardPage() {
       stats={{ totalXp, dayStreak, badgesEarned }}
       courses={courses}
       assignmentsToDo={assignmentsToDo}
-      nextLesson={nextLesson}
+      recommendedLesson={recommendedLesson}
     />
   );
 }

@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/session';
 import type { Lesson } from '@/lib/mock-data';
 import { getTutorHint, type GetTutorHintInput } from '@/ai/flows/get-tutor-hint-flow';
+import crypto from 'crypto';
 
 export async function completeLesson(lessonId: string) {
     const session = await getSession();
@@ -80,5 +81,37 @@ export async function getTutorHintAction(input: GetTutorHintInput) {
     } catch (error) {
         console.error("Failed to get AI Tutor hint:", error);
         return { success: false, message: 'An AI error occurred.' };
+    }
+}
+
+export async function recordQuestionAnswerAction(data: {
+    lessonId: string;
+    questionId: string;
+    answer: string;
+    isCorrect: boolean;
+}) {
+    const session = await getSession();
+    if (!session) {
+        return { success: false, message: 'Not authenticated.' };
+    }
+
+    const { lessonId, questionId, answer, isCorrect } = data;
+    
+    try {
+        const db = await getDb();
+        await db.run(
+            'INSERT INTO user_question_answers (id, userId, lessonId, questionId, answer, isCorrect, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            `ans_${crypto.randomUUID()}`,
+            session.id,
+            lessonId,
+            questionId,
+            answer,
+            isCorrect,
+            new Date().toISOString()
+        );
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to record question answer:', error);
+        return { success: false, message: 'Database error.' };
     }
 }

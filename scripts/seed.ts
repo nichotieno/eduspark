@@ -88,6 +88,21 @@ async function seed() {
             FOREIGN KEY(lessonId) REFERENCES lessons(id) ON DELETE CASCADE
         );
 
+        -- User Question Answers Table
+        DROP TABLE IF EXISTS user_question_answers;
+        CREATE TABLE user_question_answers (
+            id TEXT PRIMARY KEY,
+            userId TEXT NOT NULL,
+            lessonId TEXT NOT NULL,
+            questionId TEXT NOT NULL,
+            answer TEXT NOT NULL,
+            isCorrect BOOLEAN NOT NULL,
+            timestamp TEXT NOT NULL,
+            FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY(lessonId) REFERENCES lessons(id) ON DELETE CASCADE,
+            FOREIGN KEY(questionId) REFERENCES questions(id) ON DELETE CASCADE
+        );
+
         -- Assignments Table
         DROP TABLE IF EXISTS assignments;
         CREATE TABLE assignments (

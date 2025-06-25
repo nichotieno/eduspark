@@ -14,9 +14,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Flame, Medal, Sparkles, Clock, BookOpen, Calculator, FlaskConical, Trophy, ClipboardList } from "lucide-react";
+import { Flame, Medal, Sparkles, Clock, BookOpen, Calculator, FlaskConical, Trophy, ClipboardList, BrainCircuit } from "lucide-react";
 import Link from "next/link";
 import { type SessionPayload } from "@/lib/session";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+type RecommendedLesson = (Lesson & { course: Omit<Course, 'Icon'>, reasoning: string });
 
 type StudentDashboardClientProps = {
     user: SessionPayload;
@@ -27,7 +30,7 @@ type StudentDashboardClientProps = {
     };
     courses: Omit<Course, 'Icon'>[];
     assignmentsToDo: number;
-    nextLesson: (Lesson & { course: Omit<Course, 'Icon'> }) | null;
+    recommendedLesson: RecommendedLesson | null;
 };
 
 const StatCard = ({
@@ -83,7 +86,7 @@ export function StudentDashboardClient({
     stats,
     courses,
     assignmentsToDo,
-    nextLesson
+    recommendedLesson
 }: StudentDashboardClientProps) {
 
   const userBadges = stats.badgesEarned > 0 ? [{ id: 'b1', name: 'Math Beginner', Icon: Medal }] : [];
@@ -133,16 +136,20 @@ export function StudentDashboardClient({
         <div className="space-y-8">
             <div>
                 <h2 className="mb-4 font-headline text-2xl font-bold">Continue Learning</h2>
-                 {nextLesson ? (
+                 {recommendedLesson ? (
                     <Card>
                         <CardHeader>
-                            <CardTitle>{nextLesson.title}</CardTitle>
-                            <CardDescription>{nextLesson.course.title}</CardDescription>
+                            <CardTitle>{recommendedLesson.title}</CardTitle>
+                            <CardDescription>{recommendedLesson.course.title}</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground mb-4">You're doing great, keep it up!</p>
+                        <CardContent className="space-y-4">
+                            <Alert className="text-left border-primary/50 bg-primary/5">
+                                <BrainCircuit className="h-4 w-4 text-primary" />
+                                <AlertTitle>AI Recommendation</AlertTitle>
+                                <AlertDescription>{recommendedLesson.reasoning}</AlertDescription>
+                            </Alert>
                             <Button className="w-full" asChild>
-                                <Link href={`/courses/${nextLesson.courseId}/lessons/${nextLesson.id}`}>
+                                <Link href={`/courses/${recommendedLesson.courseId}/lessons/${recommendedLesson.id}`}>
                                     Jump Back In
                                 </Link>
                             </Button>
