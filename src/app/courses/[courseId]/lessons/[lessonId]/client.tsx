@@ -15,11 +15,11 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import { Lightbulb, X, Check, ChevronLeft, Award, ChevronRight } from "lucide-react";
+import { Lightbulb, X, Check, ChevronLeft, Award, ChevronRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
-import { completeLesson } from "@/app/courses/actions";
+import { completeLesson, getTutorHintAction } from "@/app/courses/actions";
 import { useToast } from "@/hooks/use-toast";
 
 type LessonPageClientProps = {
@@ -36,6 +36,8 @@ export function LessonPageClient({ initialLesson, allCourseLessons }: LessonPage
   const [textAnswer, setTextAnswer] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const [showHint, setShowHint] = useState(false);
+  const [aiHint, setAiHint] = useState<string | null>(null);
+  const [isGeneratingHint, setIsGeneratingHint] = useState(false);
   const [lessonComplete, setLessonComplete] = useState(false);
   
   useEffect(() => {
@@ -81,6 +83,7 @@ export function LessonPageClient({ initialLesson, allCourseLessons }: LessonPage
         setTextAnswer("");
         setFeedback(null);
         setShowHint(false);
+        setAiHint(null);
       }
     }
   };
@@ -133,6 +136,30 @@ export function LessonPageClient({ initialLesson, allCourseLessons }: LessonPage
     setFeedback(null);
   }
 
+  const handleGetAiHint = async () => {
+    if (!question) return;
+    setIsGeneratingHint(true);
+    setAiHint(null);
+
+    const result = await getTutorHintAction({
+      lessonTitle: lesson.title,
+      questionText: question.text,
+      questionOptions: question.options || [],
+    });
+    
+    if (result.success && result.hint) {
+      setAiHint(result.hint);
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'AI Tutor Error',
+        description: result.message || 'Could not get a hint at this time.',
+      });
+    }
+
+    setIsGeneratingHint(false);
+  }
+
   const nextQuestion = () => {
     if (hasQuestions && currentQuestionIndex < lesson.questions.length - 1) {
       setCurrentItemIndex(currentItemIndex + 1);
@@ -140,6 +167,7 @@ export function LessonPageClient({ initialLesson, allCourseLessons }: LessonPage
       setTextAnswer("");
       setFeedback(null);
       setShowHint(false);
+      setAiHint(null);
     } else {
       setLessonComplete(true);
     }
@@ -298,6 +326,13 @@ export function LessonPageClient({ initialLesson, allCourseLessons }: LessonPage
                         <AlertDescription>{question.hint}</AlertDescription>
                     </Alert>
                     )}
+                    {aiHint && (
+                        <Alert className="mt-6 border-accent">
+                            <Sparkles className="h-4 w-4 text-accent" />
+                            <AlertTitle>AI Tutor</AlertTitle>
+                            <AlertDescription>{aiHint}</AlertDescription>
+                        </Alert>
+                    )}
                      {feedback && (
                         <Alert variant={feedback === "correct" ? "default" : "destructive"} className="mt-6 bg-card">
                         {feedback === 'correct' ? <Check className="h-4 w-4"/> : <X className="h-4 w-4"/>}
@@ -336,6 +371,14 @@ export function LessonPageClient({ initialLesson, allCourseLessons }: LessonPage
                             >
                             <Lightbulb className="mr-2 h-4 w-4" />
                             Hint
+                        </Button>
+                         <Button
+                            variant="outline"
+                            onClick={handleGetAiHint}
+                            disabled={isGeneratingHint || !!feedback}
+                            >
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            {isGeneratingHint ? 'Thinking...' : 'AI Hint'}
                         </Button>
                         {feedback === 'correct' ? (
                             <Button onClick={nextQuestion}>Continue</Button>

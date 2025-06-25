@@ -5,6 +5,7 @@ import { getDb } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/session';
 import type { Lesson } from '@/lib/mock-data';
+import { getTutorHint, type GetTutorHintInput } from '@/ai/flows/get-tutor-hint-flow';
 
 export async function completeLesson(lessonId: string) {
     const session = await getSession();
@@ -64,5 +65,20 @@ export async function completeLesson(lessonId: string) {
         await db.run('ROLLBACK');
         console.error('Failed to complete lesson:', error);
         return { success: false, message: 'An error occurred while saving progress.' };
+    }
+}
+
+export async function getTutorHintAction(input: GetTutorHintInput) {
+    const session = await getSession();
+    if (!session) {
+        return { success: false, message: 'Not authenticated.' };
+    }
+
+    try {
+        const result = await getTutorHint(input);
+        return { success: true, hint: result.hintText };
+    } catch (error) {
+        console.error("Failed to get AI Tutor hint:", error);
+        return { success: false, message: 'An AI error occurred.' };
     }
 }
