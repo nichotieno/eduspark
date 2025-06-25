@@ -8,6 +8,7 @@ import {
   PanelLeft,
   Trophy,
   LogOut,
+  User as UserIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -26,9 +27,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { logout } from "@/app/auth/actions";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 import { SessionProvider, useSession } from "@/contexts/session-context";
 
 
@@ -73,6 +81,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         { href: "/dashboard/student", icon: Home, label: "Dashboard" },
         { href: "/dashboard/courses", icon: BookOpen, label: "Courses" },
         { href: "/dashboard/challenge", icon: Trophy, label: "Daily Challenge" },
+        { href: "/dashboard/profile", icon: UserIcon, label: "Profile" },
     ];
 
     const teacherNavItems = [
@@ -98,20 +107,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                 ))}
             </TooltipProvider>
             </nav>
-            <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <form action={logout}>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 md:h-8 md:w-8 text-muted-foreground hover:text-foreground">
-                                <LogOut className="h-5 w-5" />
-                            </Button>
-                        </form>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">Logout</TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-            </nav>
         </aside>
         <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -134,13 +129,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                     {navItems.map((item) => (
                     <MobileNavItem key={item.href} {...item} pathname={pathname} />
                     ))}
-                    <Separator className="my-2"/>
-                    <form action={logout}>
-                        <button className="w-full flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                            <LogOut className="h-5 w-5" />
-                            Logout
-                        </button>
-                    </form>
                 </nav>
                 </SheetContent>
             </Sheet>
@@ -150,15 +138,39 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             {isLoading ? (
                 <Skeleton className="h-10 w-10 rounded-full" />
             ) : session ? (
-                <Avatar>
-                    <AvatarImage src={session.avatarUrl} alt={session.name} data-ai-hint="person" />
-                    <AvatarFallback>
-                    {session.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                </Avatar>
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="rounded-full">
+                            <Avatar>
+                                <AvatarImage src={session.avatarUrl} alt={session.name} data-ai-hint="person" />
+                                <AvatarFallback>
+                                {session.name
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")}
+                                </AvatarFallback>
+                            </Avatar>
+                            <span className="sr-only">Toggle user menu</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                            <Link href="/dashboard/profile">Profile</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem disabled>Support</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="p-0">
+                             <form action={logout} className="w-full">
+                                <button type="submit" className="w-full text-left flex items-center gap-2 px-2 py-1.5 text-sm">
+                                    <LogOut className="h-4 w-4" />
+                                    <span>Logout</span>
+                                </button>
+                            </form>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             ) : null}
             </header>
             <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
