@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -23,9 +24,11 @@ import {
   mockTeacherData,
   mockCourses as initialCourses,
   mockTopics as initialTopics,
+  mockLessons as initialLessons,
   mockDailyAssignments,
   type Course,
   type Topic,
+  type Lesson,
   type DailyAssignment,
 } from "@/lib/mock-data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -62,6 +65,7 @@ import {
   BookOpen,
   CalendarIcon,
   BookCopy,
+  BookMarked,
 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -84,6 +88,14 @@ export default function TeacherDashboard() {
   const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
   const [topicTitle, setTopicTitle] = useState("");
   const [currentCourseIdForTopic, setCurrentCourseIdForTopic] = useState<string | null>(null);
+
+  // Lesson State
+  const [lessons, setLessons] = useState<Lesson[]>(initialLessons);
+  const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false);
+  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
+  const [lessonTitle, setLessonTitle] = useState("");
+  const [lessonXp, setLessonXp] = useState(100);
+  const [currentTopicIdForLesson, setCurrentTopicIdForLesson] = useState<string | null>(null);
 
   // Assignment State
   const [assignments, setAssignments] =
@@ -210,6 +222,75 @@ export default function TeacherDashboard() {
     }
     setIsTopicDialogOpen(false);
     setEditingTopic(null);
+  };
+
+  // Lesson Handlers
+  const handleCreateNewLesson = (topicId: string) => {
+    setEditingLesson(null);
+    setLessonTitle("");
+    setLessonXp(100);
+    setCurrentTopicIdForLesson(topicId);
+    setIsLessonDialogOpen(true);
+  };
+
+  const handleEditLesson = (lesson: Lesson) => {
+    setEditingLesson(lesson);
+    setLessonTitle(lesson.title);
+    setLessonXp(lesson.xp);
+    setCurrentTopicIdForLesson(lesson.topicId);
+    setIsLessonDialogOpen(true);
+  };
+
+  const handleDeleteLesson = (lessonId: string) => {
+    setLessons(lessons.filter((l) => l.id !== lessonId));
+    toast({
+      title: "Lesson Deleted",
+      description: "The lesson has been removed from the topic.",
+    });
+  };
+
+  const handleLessonFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!lessonTitle.trim() || !lessonXp) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please fill out all fields.",
+      });
+      return;
+    }
+
+    const courseId = topics.find(t => t.id === currentTopicIdForLesson)?.courseId;
+    if (!courseId) {
+       toast({ variant: "destructive", title: "Error", description: "Could not find associated course." });
+       return;
+    }
+
+
+    if (editingLesson) {
+      setLessons(
+        lessons.map((l) =>
+          l.id === editingLesson.id
+            ? { ...l, title: lessonTitle, xp: lessonXp }
+            : l
+        )
+      );
+      toast({ title: "Lesson Updated" });
+    } else if (currentTopicIdForLesson) {
+      const newLesson: Lesson = {
+        id: `lesson_${Date.now()}`,
+        topicId: currentTopicIdForLesson,
+        courseId: courseId,
+        title: lessonTitle,
+        xp: lessonXp,
+        steps: [],
+        questions: [],
+      };
+      setLessons([newLesson, ...lessons]);
+      toast({ title: "Lesson Created" });
+    }
+    setIsLessonDialogOpen(false);
+    setEditingLesson(null);
   };
 
   // Assignment Handlers
@@ -360,7 +441,7 @@ export default function TeacherDashboard() {
         </TabsContent>
         <TabsContent value="courses">
           <Card>
-            <CardHeader className="flex items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Manage Courses</CardTitle>
                 <CardDescription>
@@ -391,7 +472,7 @@ export default function TeacherDashboard() {
                                         </div>
                                     </div>
                                 </AccordionTrigger>
-                                <div className="flex shrink-0">
+                                <div className="ml-4 flex shrink-0">
                                     <Button
                                     variant="ghost"
                                     size="icon"
@@ -413,21 +494,21 @@ export default function TeacherDashboard() {
                              </div>
                         </Card>
                         <AccordionContent className="p-2 pl-8 pr-4">
-                            <div className="border-l pl-6">
-                                <div className="flex justify-between items-center mb-4">
+                            <div className="border-l pl-6 space-y-4">
+                                <div className="flex justify-between items-center">
                                     <h4 className="font-semibold">Topics</h4>
                                     <Button variant="outline" size="sm" onClick={() => handleCreateNewTopic(course.id)}>
                                         <PlusCircle className="mr-2 h-4 w-4" />
                                         Add New Topic
                                     </Button>
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-4">
                                 {topics.filter(t => t.courseId === course.id).map(topic => (
                                     <Card key={topic.id} className="bg-muted/50">
-                                        <CardContent className="p-3 flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                               <BookCopy className="h-4 w-4 text-muted-foreground" />
-                                               <p className="font-medium">{topic.title}</p>
+                                        <CardHeader className="p-3 flex flex-row items-center justify-between">
+                                             <div className="flex items-center gap-3">
+                                               <BookCopy className="h-5 w-5 text-muted-foreground" />
+                                               <p className="font-semibold">{topic.title}</p>
                                             </div>
                                              <div className="flex shrink-0">
                                                 <Button
@@ -448,7 +529,32 @@ export default function TeacherDashboard() {
                                                     <span className="sr-only">Delete Topic</span>
                                                 </Button>
                                             </div>
+                                        </CardHeader>
+                                        <CardContent className="p-3 pt-0 space-y-2">
+                                            <h5 className="text-sm font-medium text-muted-foreground">Lessons</h5>
+                                            {lessons.filter(l => l.topicId === topic.id).map(lesson => (
+                                                <div key={lesson.id} className="flex items-center justify-between p-2 rounded-md bg-background/70">
+                                                   <div className="flex items-center gap-2">
+                                                        <BookMarked className="h-4 w-4 text-muted-foreground" />
+                                                        <span className="font-medium">{lesson.title}</span>
+                                                        <Badge variant="secondary">{lesson.xp} XP</Badge>
+                                                   </div>
+                                                   <div className="flex shrink-0">
+                                                        <Button variant="ghost" size="icon" onClick={() => handleEditLesson(lesson)}><Pencil className="h-4 w-4" /></Button>
+                                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteLesson(lesson.id)}><Trash2 className="h-4 w-4" /></Button>
+                                                   </div>
+                                                </div>
+                                            ))}
+                                            {lessons.filter(l => l.topicId === topic.id).length === 0 && (
+                                                <p className="text-xs text-muted-foreground text-center py-2">No lessons in this topic yet.</p>
+                                            )}
                                         </CardContent>
+                                        <CardFooter className="p-3 pt-0">
+                                            <Button variant="outline" size="sm" className="w-full" onClick={() => handleCreateNewLesson(topic.id)}>
+                                                <PlusCircle className="mr-2 h-4 w-4" />
+                                                Add New Lesson
+                                            </Button>
+                                        </CardFooter>
                                     </Card>
                                 ))}
                                 {topics.filter(t => t.courseId === course.id).length === 0 && (
@@ -625,6 +731,60 @@ export default function TeacherDashboard() {
               </DialogClose>
               <Button type="submit">
                 {editingTopic ? "Save Changes" : "Create Topic"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Lesson Dialog */}
+      <Dialog open={isLessonDialogOpen} onOpenChange={setIsLessonDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingLesson ? "Edit Lesson" : "Create New Lesson"}
+            </DialogTitle>
+            <DialogDescription>
+              {editingLesson
+                ? "Update the details for this lesson."
+                : "Fill in the details for your new lesson."}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleLessonFormSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="lesson-title" className="text-right">
+                  Title
+                </Label>
+                <Input
+                  id="lesson-title"
+                  value={lessonTitle}
+                  onChange={(e) => setLessonTitle(e.target.value)}
+                  className="col-span-3"
+                  placeholder="e.g., Introduction to Variables"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="lesson-xp" className="text-right">
+                  XP Value
+                </Label>
+                <Input
+                  id="lesson-xp"
+                  type="number"
+                  value={lessonXp}
+                  onChange={(e) => setLessonXp(parseInt(e.target.value, 10))}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="secondary">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button type="submit">
+                {editingLesson ? "Save Changes" : "Create Lesson"}
               </Button>
             </DialogFooter>
           </form>
