@@ -5,7 +5,7 @@ import {
   Home,
   Users,
   PanelLeft,
-  Settings,
+  Trophy,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -36,6 +36,7 @@ export default function DashboardLayout({
   const navItems = [
     { href: "/dashboard/student", icon: Home, label: "Dashboard" },
     { href: "/dashboard/courses", icon: BookOpen, label: "Courses" },
+    { href: "/dashboard/challenge", icon: Trophy, label: "Daily Challenge" },
     { href: "/dashboard/teacher", icon: Users, label: "Teacher View" },
   ];
 

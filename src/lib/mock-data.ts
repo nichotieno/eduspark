@@ -1,4 +1,4 @@
-import { Book, Calculator, FlaskConical, Medal, Shield, Star } from "lucide-react";
+import { Book, Calculator, FlaskConical, Medal, Shield, Star, Trophy } from "lucide-react";
 
 export type User = {
   id: string;
@@ -62,6 +62,24 @@ export type StudentProgress = {
   lastActive: string;
 };
 
+export type DailyChallenge = {
+  id: string;
+  date: string; // e.g., '2024-07-29'
+  title: string;
+  problem: string;
+  topic: 'Math' | 'Science' | 'CS';
+};
+
+export type ChallengeComment = {
+  id: string;
+  challengeId: string;
+  userName: string;
+  userAvatarUrl: string;
+  comment: string;
+  timestamp: string;
+};
+
+
 // Mock Data
 export const mockUser: User = {
   id: "user_1",
@@ -80,6 +98,7 @@ export const mockBadges: Badge[] = [
   { id: 'b3', name: 'Course Champion', description: 'Complete an entire course.', Icon: Medal },
   { id: 'b4', name: 'Topic Master', description: 'Master a full topic.', Icon: Shield },
   { id: 'b5', name: 'Perfect Score', description: 'Get a perfect score on a lesson.', Icon: Book },
+  { id: 'b6', name: 'Challenge Solver', description: 'Solve your first daily challenge.', Icon: Trophy },
 ];
 
 export const mockCourses: Course[] = [
@@ -145,6 +164,14 @@ export const mockLessons: Lesson[] = [
         correctAnswer: "3x + 10",
         hint: "Use the distributive property to multiply 3 by both x and 4.",
       },
+      {
+        id: "m1q3",
+        text: "If y = 2, what is the value of the expression 5y - 3?",
+        type: 'multiple-choice',
+        options: ["7", "10", "13", "2"],
+        correctAnswer: "7",
+        hint: "Substitute the value of y into the expression and perform the calculation.",
+      }
     ],
   },
   {
@@ -201,6 +228,14 @@ export const mockLessons: Lesson[] = [
             correctAnswer: "An acute angle",
             hint: "Think 'a-cute little angle' for small angles.",
         },
+        {
+            id: "m2q4",
+            text: "The three angles of a triangle always add up to how many degrees?",
+            type: 'multiple-choice',
+            options: ["90°", "180°", "270°", "360°"],
+            correctAnswer: "180°",
+            hint: "This is a fundamental theorem in Euclidean geometry.",
+          }
     ],
   },
   // Science Lessons
@@ -258,6 +293,14 @@ export const mockLessons: Lesson[] = [
         correctAnswer: "Saturn",
         hint: "These rings are made of chunks of ice and rock.",
       },
+      {
+        id: "s1q4",
+        text: "What force holds the planets in orbit around the Sun?",
+        type: 'multiple-choice',
+        options: ["Magnetism", "Gravity", "Friction", "Nuclear Force"],
+        correctAnswer: "Gravity",
+        hint: "This fundamental force of nature attracts any two objects with mass.",
+      }
     ],
   },
   {
@@ -314,6 +357,14 @@ export const mockLessons: Lesson[] = [
         correctAnswer: "To provide structural support and protection",
         hint: "This rigid outer layer is not found in animal cells.",
       },
+      {
+        id: "s2q4",
+        text: "Which of these is NOT found in an animal cell?",
+        type: 'multiple-choice',
+        options: ["Cell Membrane", "Mitochondria", "Nucleus", "Cell Wall"],
+        correctAnswer: "Cell Wall",
+        hint: "This rigid outer layer provides structural support to plant cells, fungi, and bacteria.",
+      }
     ],
   },
 ];
@@ -332,4 +383,18 @@ export const mockTeacherData = {
             ]
         }
     ]
-}
+};
+
+export const mockDailyChallenge: DailyChallenge = {
+    id: 'dc1',
+    date: '2024-07-29',
+    title: "The Traveling Salesperson's Lunch",
+    problem: 'A salesperson starts at city A, needs to visit cities B, C, and D exactly once, and then return to city A. The distances between the cities are as follows: A-B=10km, A-C=15km, A-D=20km, B-C=35km, B-D=25km, C-D=30km. What is the shortest possible route the salesperson can take?',
+    topic: 'Math',
+};
+
+export const mockChallengeComments: ChallengeComment[] = [
+    { id: 'cc1', challengeId: 'dc1', userName: 'Isaac N.', userAvatarUrl: 'https://placehold.co/100x100.png', comment: "This is a classic Traveling Salesperson Problem! You can list out all the possible paths and calculate the total distance for each.", timestamp: '2 hours ago' },
+    { id: 'cc2', challengeId: 'dc1', userName: 'Marie C.', userAvatarUrl: 'https://placehold.co/100x100.png', comment: 'I found a path that is 80km. Can anyone beat that? A -> B -> D -> C -> A.', timestamp: '1 hour ago' },
+    { id: 'cc3', challengeId: 'dc1', userName: 'Albert E.', userAvatarUrl: 'https://placehold.co/100x100.png', comment: 'Ah, I see! A -> D -> B -> C -> A is 100km. The order really matters!', timestamp: '30 mins ago' },
+];
