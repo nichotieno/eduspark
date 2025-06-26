@@ -1,4 +1,6 @@
 
+'use server';
+
 import { getDb } from '@/lib/db';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
@@ -6,7 +8,6 @@ import { DailyChallengePageClient } from './client';
 import type { DailyChallenge, ChallengeComment, ChallengeCommunitySubmission } from '@/lib/mock-data';
 import type { User } from '@/lib/definitions';
 import { generatePersonalizedChallenge } from '@/ai/flows/generate-personalized-challenge-flow';
-import crypto from 'crypto';
 
 export default async function DailyChallengePage() {
     const session = await getSession();

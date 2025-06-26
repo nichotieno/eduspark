@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { getDb } from '@/lib/db';
 import { getSession } from '@/lib/session';
 import { revalidatePath } from 'next/cache';
-import crypto from 'crypto';
 
 const CommentSchema = z.object({
   comment: z.string().min(3, 'Comment must be at least 3 characters.'),

@@ -4,7 +4,6 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
-import crypto from 'node:crypto';
 
 import { getDb } from '@/lib/db';
 import { createSession } from '@/lib/session';

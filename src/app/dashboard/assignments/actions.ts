@@ -5,7 +5,6 @@ import { getDb } from '@/lib/db';
 import { getSession } from '@/lib/session';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 const SubmissionSchema = z.object({
     solution: z.string().min(10, { message: 'Submission must be at least 10 characters.' }),
