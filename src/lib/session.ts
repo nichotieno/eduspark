@@ -7,15 +7,15 @@ import { type User } from './definitions';
 const secretKey = process.env.SESSION_SECRET || "fallback-secret-key-for-development";
 const key = new TextEncoder().encode(secretKey);
 
-export type SessionPayload = User & {
-    expires: Date;
-};
+// The SessionPayload no longer needs a custom expires field.
+// `jose` handles expiration with the standard `exp` claim.
+export type SessionPayload = User;
 
 export async function encrypt(payload: any) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('1d') // Session expires in 1 day
+    .setExpirationTime('1d') // Session expires in 1 day, this sets the 'exp' claim
     .sign(key);
 }
 
@@ -24,19 +24,21 @@ export async function decrypt(input: string): Promise<any> {
     const { payload } = await jwtVerify(input, key, {
       algorithms: ['HS256'],
     });
+    // jwtVerify automatically checks the 'exp' claim and throws if it's expired.
     return payload;
   } catch (error) {
-    // This can happen if the token is invalid or expired
+    // This will catch errors from an invalid signature or an expired token.
     return null;
   }
 }
 
 export async function createSession(user: User) {
   const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // Expires in 1 day
-  const sessionPayload: SessionPayload = { ...user, expires };
+  
+  // We only pass the user data to the session payload.
+  const session = await encrypt({ ...user });
 
-  const session = await encrypt(sessionPayload);
-
+  // The cookie itself needs an expiration date.
   cookies().set('session', session, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -50,8 +52,10 @@ export async function getSession(): Promise<SessionPayload | null> {
   if (!sessionCookie) return null;
   
   const session = await decrypt(sessionCookie);
-  if (!session || new Date(session.expires) < new Date()) {
-      // If session is invalid or expired, clear the cookie
+
+  // If decrypt returns null, it means the token is invalid or expired.
+  // In that case, we ensure the cookie is deleted.
+  if (!session) {
       await deleteSession();
       return null;
   }
