@@ -3,28 +3,12 @@
  * @fileOverview An AI flow for recommending the next lesson for a student.
  *
  * - generateNextLessonRecommendation - A function that recommends the best next lesson based on performance.
- * - GenerateNextLessonRecommendationInput - The input type for the function.
- * - GenerateNextLessonRecommendationOutput - The return type for the function.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
 import { getStudentPerformanceSummary } from '../tools/get-student-performance-summary';
 import { getAvailableLessons } from '../tools/get-available-lessons';
-
-// Input Schema
-export const GenerateNextLessonRecommendationInputSchema = z.object({
-  userId: z.string().describe("The ID of the student."),
-});
-export type GenerateNextLessonRecommendationInput = z.infer<typeof GenerateNextLessonRecommendationInputSchema>;
-
-// Output Schema
-export const GenerateNextLessonRecommendationOutputSchema = z.object({
-  lessonId: z.string().optional().describe("The ID of the recommended lesson."),
-  courseId: z.string().optional().describe("The course ID of the recommended lesson."),
-  reasoning: z.string().describe("A brief, one-sentence explanation for the recommendation to show to the student."),
-});
-export type GenerateNextLessonRecommendationOutput = z.infer<typeof GenerateNextLessonRecommendationOutputSchema>;
+import { GenerateNextLessonRecommendationInputSchema, type GenerateNextLessonRecommendationInput, GenerateNextLessonRecommendationOutputSchema, type GenerateNextLessonRecommendationOutput } from './types';
 
 
 // Exported wrapper function

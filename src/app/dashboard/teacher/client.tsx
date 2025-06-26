@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useActionState, useEffect, useMemo } from "react";
@@ -88,7 +87,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { type GenerateClassroomInsightsOutput } from "@/ai/flows/generate-classroom-insights-flow";
+import { type GenerateClassroomInsightsOutput } from "@/ai/flows/types";
 
 type StudentProgressData = {
   studentId: string;

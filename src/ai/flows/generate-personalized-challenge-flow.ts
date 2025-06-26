@@ -3,41 +3,12 @@
  * @fileOverview An AI flow for generating a personalized daily challenge for a student.
  *
  * - generatePersonalizedChallenge - A function that creates a unique challenge based on a student's learning history.
- * - GeneratePersonalizedChallengeInput - The input type for the function.
- * - GeneratePersonalizedChallengeOutput - The return type for the function.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
 import { getStudentLearningHistory } from '../tools/get-student-learning-history';
+import { GeneratePersonalizedChallengeInputSchema, type GeneratePersonalizedChallengeInput, GeneratePersonalizedChallengeOutputSchema, type GeneratePersonalizedChallengeOutput } from './types';
 
-// Input Schema
-const GeneratePersonalizedChallengeInputSchema = z.object({
-  userId: z
-    .string()
-    .describe('The ID of the student for whom to generate the challenge.'),
-});
-export type GeneratePersonalizedChallengeInput = z.infer<
-  typeof GeneratePersonalizedChallengeInputSchema
->;
-
-// Output Schema
-const GeneratePersonalizedChallengeOutputSchema = z.object({
-  title: z.string().describe('A short, catchy title for the challenge.'),
-  problem: z
-    .string()
-    .describe(
-      'The full text of the challenge problem. It should be a word problem or a conceptual question.'
-    ),
-  topic: z
-    .string()
-    .describe(
-      "The general STEM topic of the challenge (e.g., 'Algebra', 'Biology', 'Physics')."
-    ),
-});
-export type GeneratePersonalizedChallengeOutput = z.infer<
-  typeof GeneratePersonalizedChallengeOutputSchema
->;
 
 // Exported wrapper function
 export async function generatePersonalizedChallenge(

@@ -3,20 +3,12 @@
  * @fileOverview An AI flow for generating classroom insights for a teacher.
  *
  * - generateClassroomInsights - A function that creates a list of actionable insights for a teacher.
- * - GenerateClassroomInsightsOutput - The return type for the function.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
 import { getClassroomAnalytics } from '../tools/get-classroom-analytics';
+import { GenerateClassroomInsightsOutputSchema, type GenerateClassroomInsightsOutput } from './types';
 
-// Output Schema
-const GenerateClassroomInsightsOutputSchema = z.object({
-  insights: z.array(z.string()).describe("A list of 2-4 brief, actionable, and encouraging insights for the teacher based on the provided classroom analytics. The tone should be helpful and professional, like a teaching assistant."),
-});
-export type GenerateClassroomInsightsOutput = z.infer<
-  typeof GenerateClassroomInsightsOutputSchema
->;
 
 // Exported wrapper function
 export async function generateClassroomInsights(): Promise<GenerateClassroomInsightsOutput> {

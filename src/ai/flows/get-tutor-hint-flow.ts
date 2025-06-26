@@ -3,26 +3,10 @@
  * @fileOverview An AI flow for generating a hint from a tutor.
  *
  * - getTutorHint - A function that generates a hint for a quiz question.
- * - GetTutorHintInput - The input type for the function.
- * - GetTutorHintOutput - The return type for the function.
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-
-// Input Schema
-const GetTutorHintInputSchema = z.object({
-  lessonTitle: z.string().describe('The title of the lesson.'),
-  questionText: z.string().describe('The text of the question the student is stuck on.'),
-  questionOptions: z.array(z.string()).describe('The multiple-choice options for the question, if any.'),
-});
-export type GetTutorHintInput = z.infer<typeof GetTutorHintInputSchema>;
-
-// Output Schema
-const GetTutorHintOutputSchema = z.object({
-  hintText: z.string().describe("A helpful, Socratic-style hint for the student. It should not give the direct answer."),
-});
-export type GetTutorHintOutput = z.infer<typeof GetTutorHintOutputSchema>;
+import { GetTutorHintInputSchema, type GetTutorHintInput, GetTutorHintOutputSchema, type GetTutorHintOutput } from './types';
 
 // Exported wrapper function
 export async function getTutorHint(input: GetTutorHintInput): Promise<GetTutorHintOutput> {

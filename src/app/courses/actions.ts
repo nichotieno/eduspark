@@ -1,11 +1,11 @@
-
 'use server';
 
 import { getDb } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/session';
 import type { Lesson } from '@/lib/mock-data';
-import { getTutorHint, type GetTutorHintInput } from '@/ai/flows/get-tutor-hint-flow';
+import { getTutorHint } from '@/ai/flows/get-tutor-hint-flow';
+import { type GetTutorHintInput } from '@/ai/flows/types';
 
 export async function completeLesson(lessonId: string) {
     const session = await getSession();
