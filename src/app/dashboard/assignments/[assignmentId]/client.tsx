@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useActionState } from "react";
+import React, { useEffect, useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from 'next/link';
 import {
@@ -51,9 +51,14 @@ export function AssignmentPageClient({ assignment, submission }: AssignmentPageC
   const { toast } = useToast();
   
   const [state, formAction] = useActionState(submitAssignment, initialFormState);
+  const [isPastDue, setIsPastDue] = useState(false);
+
+  useEffect(() => {
+    // Calculate isPastDue on the client to avoid hydration mismatch
+    setIsPastDue(new Date(assignment.dueDate) < new Date());
+  }, [assignment.dueDate]);
   
   const isSubmitted = !!submission || state.success;
-  const isPastDue = new Date(assignment.dueDate) < new Date();
   const isGraded = isSubmitted && submission?.grade !== null;
 
   useEffect(() => {

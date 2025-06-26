@@ -55,6 +55,11 @@ export function DailyChallengePageClient({ challenge, initialComments, hasSubmit
   const [solution, setSolution] = useState("");
   const [comment, setComment] = useState("");
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   const [commentState, commentAction] = useActionState(postComment, initialFormState);
   const [solutionState, solutionAction] = useActionState(submitSolution, initialFormState);
@@ -126,7 +131,7 @@ export function DailyChallengePageClient({ challenge, initialComments, hasSubmit
                             <div className="text-left">
                               <p className="font-semibold">{sub.studentName}</p>
                               <p className="text-sm text-muted-foreground">
-                                Submitted {formatDistanceToNow(new Date(sub.submittedAt), { addSuffix: true })}
+                                {isClient ? `Submitted ${formatDistanceToNow(new Date(sub.submittedAt), { addSuffix: true })}` : '...'}
                               </p>
                             </div>
                           </div>
@@ -188,7 +193,7 @@ export function DailyChallengePageClient({ challenge, initialComments, hasSubmit
                       <div className="flex items-center justify-between">
                         <p className="font-semibold">{c.userName}</p>
                         <p className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(c.timestamp), { addSuffix: true })}
+                          {isClient ? formatDistanceToNow(new Date(c.timestamp), { addSuffix: true }) : '...'}
                         </p>
                       </div>
                       <div

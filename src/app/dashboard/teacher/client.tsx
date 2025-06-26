@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useActionState, useEffect, useMemo } from "react";
@@ -144,6 +145,11 @@ export function TeacherDashboardClient({
   aiInsights,
 }: TeacherDashboardClientProps) {
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const courses = initialCourses;
   const topics = initialTopics;
@@ -404,7 +410,7 @@ export function TeacherDashboardClient({
                               <p className="text-sm text-muted-foreground">{submission.assignmentTitle}</p>
                             </div>
                             <div className="ml-auto text-sm text-muted-foreground">
-                              {formatDistanceToNow(new Date(submission.submittedAt), { addSuffix: true })}
+                              {isClient ? formatDistanceToNow(new Date(submission.submittedAt), { addSuffix: true }) : '...'}
                             </div>
                           </div>
                         ))}

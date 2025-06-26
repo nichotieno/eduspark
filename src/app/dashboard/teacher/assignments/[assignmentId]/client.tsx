@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useActionState, useEffect } from "react";
+import React, { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import {
@@ -108,6 +108,11 @@ function GradingForm({ submission }: { submission: AssignmentSubmission }) {
 }
 
 export function TeacherAssignmentSubmissionsClient({ assignment, submissions }: PageProps) {
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
     <div className="container mx-auto max-w-4xl py-8">
       <Button variant="ghost" asChild className="mb-4">
@@ -154,7 +159,7 @@ export function TeacherAssignmentSubmissionsClient({ assignment, submissions }: 
                             <div className="text-left">
                                 <p className="font-semibold">{submission.studentName}</p>
                                 <p className="text-sm text-muted-foreground">
-                                Submitted {formatDistanceToNow(new Date(submission.submittedAt), { addSuffix: true })}
+                                  {isClient ? `Submitted ${formatDistanceToNow(new Date(submission.submittedAt), { addSuffix: true })}` : '...'}
                                 </p>
                             </div>
                         </div>

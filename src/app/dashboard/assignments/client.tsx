@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { format, formatDistanceToNow } from 'date-fns';
 import type { StudentAssignment } from "@/lib/mock-data";
 import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 
 type PageProps = {
   toDoAssignments: StudentAssignment[];
@@ -17,6 +18,12 @@ type PageProps = {
 };
 
 function AssignmentCard({ assignment }: { assignment: StudentAssignment }) {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
     return (
         <Link href={`/dashboard/assignments/${assignment.id}`}>
             <Card className="transition-all hover:shadow-md hover:border-primary/30">
@@ -44,7 +51,8 @@ function AssignmentCard({ assignment }: { assignment: StudentAssignment }) {
                 </CardHeader>
                 <CardContent>
                     <p className="text-sm text-muted-foreground">
-                        Due: {format(assignment.dueDate, 'PPP')} ({formatDistanceToNow(assignment.dueDate, { addSuffix: true })})
+                        Due: {format(assignment.dueDate, 'PPP')}
+                        {isClient && ` (${formatDistanceToNow(assignment.dueDate, { addSuffix: true })})`}
                     </p>
                 </CardContent>
             </Card>
