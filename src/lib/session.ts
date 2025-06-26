@@ -1,10 +1,11 @@
-
 import 'server-only';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { type User } from './definitions';
 
-const secretKey = process.env.SESSION_SECRET || "fallback-secret-key-for-development";
+// For development, we use a hardcoded secret. For production, this should be
+// securely managed as an environment variable.
+const secretKey = "fallback-secret-key-for-development";
 const key = new TextEncoder().encode(secretKey);
 
 // The SessionPayload no longer needs a custom expires field.
@@ -28,6 +29,7 @@ export async function decrypt(input: string): Promise<any> {
     return payload;
   } catch (error) {
     // This will catch errors from an invalid signature or an expired token.
+    // console.log("Error decrypting session:", error);
     return null;
   }
 }
