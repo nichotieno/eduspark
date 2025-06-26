@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import type { User } from "@/lib/definitions";
 import { updateProfile, updateAvatar, updatePassword } from './actions';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Pencil } from 'lucide-react';
 
 const initialFormState = { message: '', success: false, errors: {} };
@@ -94,7 +94,7 @@ export function ProfilePageClient({ user }: { user: User }) {
                         <div className="flex flex-col items-center gap-6 sm:flex-row">
                             <div className="relative group">
                                 <Avatar className="h-24 w-24">
-                                    <AvatarImage src={avatarPreview || user.avatarUrl} alt={user.name} />
+                                    <AvatarImage src={avatarPreview || user.avatarUrl} alt={user.name} data-ai-hint="person" />
                                     <AvatarFallback>
                                     {user.name
                                         .split(" ")
@@ -133,8 +133,8 @@ export function ProfilePageClient({ user }: { user: User }) {
                                 <div className="flex justify-center gap-2">
                                     <UpdateAvatarButton />
                                     <Button variant="outline" onClick={() => {
-                                        setAvatarPreview(null)
-                                        if(fileInputRef.current) fileInputRef.current.value = "";
+                                        setAvatarPreview(null);
+                                        if (fileInputRef.current) fileInputRef.current.value = "";
                                     }}>Cancel</Button>
                                 </div>
                             </CardContent>
@@ -205,4 +205,3 @@ export function ProfilePageClient({ user }: { user: User }) {
         </div>
     );
 }
-
