@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 
 export const config = {
-  matcher: ['/dashboard/:path*'],
+  matcher: ['/dashboard/:path*', '/courses/:path*'],
 };
 
 export async function middleware(request: NextRequest) {
