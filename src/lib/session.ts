@@ -4,8 +4,10 @@ import { cookies } from 'next/headers';
 import { type User } from './definitions';
 
 // For development, we use a hardcoded secret. For production, this should be
-// securely managed as an environment variable.
-const secretKey = "fallback-secret-key-for-development";
+// securely managed as an environment variable from a secrets manager.
+// Using a hardcoded key here to ensure consistency between Edge and Node runtimes
+// in this specific development environment.
+const secretKey = "AIzaSyDAyahmUbo2M4m6POx-3kI0OAOz8SYHtuk";
 const key = new TextEncoder().encode(secretKey);
 
 // The SessionPayload no longer needs a custom expires field.
