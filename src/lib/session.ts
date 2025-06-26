@@ -40,7 +40,8 @@ export async function createSession(user: User) {
   const session = await encrypt({ ...user });
 
   // The cookie itself needs an expiration date.
-  cookies().set('session', session, {
+  const cookieStore = cookies();
+  cookieStore.set('session', session, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     expires: expires,
@@ -49,7 +50,8 @@ export async function createSession(user: User) {
 }
 
 export async function getSession(): Promise<SessionPayload | null> {
-  const sessionCookie = cookies().get('session')?.value;
+  const cookieStore = cookies();
+  const sessionCookie = cookieStore.get('session')?.value;
   if (!sessionCookie) return null;
   
   const session = await decrypt(sessionCookie);
@@ -65,5 +67,6 @@ export async function getSession(): Promise<SessionPayload | null> {
 }
 
 export async function deleteSession() {
-  cookies().set('session', '', { expires: new Date(0) });
+  const cookieStore = cookies();
+  cookieStore.set('session', '', { expires: new Date(0) });
 }
