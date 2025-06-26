@@ -1,3 +1,4 @@
+
 'use server';
 
 import { ai } from '@/ai/genkit';
@@ -27,10 +28,13 @@ export const getStudentPerformanceSummary = ai.defineTool(
   async ({ userId }) => {
     try {
       const db = await getDb();
+      // This query is designed to be robust. It calculates the percentage of correct
+      // answers per topic. The IFNULL ensures that if a division by zero occurs (which can
+      // result in NULL), it defaults to 0.0, preventing schema validation errors.
       const results = await db.all<z.infer<typeof TopicPerformanceSchema>[]>(`
         SELECT
             t.title as topicTitle,
-            CAST(SUM(CASE WHEN uqa.isCorrect THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(uqa.id) as correctPercentage,
+            IFNULL(CAST(SUM(CASE WHEN uqa.isCorrect THEN 1 ELSE 0 END) AS REAL) * 100.0 / COUNT(uqa.id), 0.0) as correctPercentage,
             COUNT(uqa.id) as totalQuestions
         FROM user_question_answers uqa
         JOIN questions q ON uqa.questionId = q.id
