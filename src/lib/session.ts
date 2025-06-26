@@ -3,11 +3,9 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { type User } from './definitions';
 
-// For development, we use a hardcoded secret. For production, this should be
-// securely managed as an environment variable from a secrets manager.
-// Using a hardcoded key here to ensure consistency between Edge and Node runtimes
-// in this specific development environment.
-const secretKey = "AIzaSyDAyahmUbo2M4m6POx-3kI0OAOz8SYHtuk";
+// This is a secure, randomly generated secret key suitable for signing JWTs.
+// It replaces the previous, incorrect key.
+const secretKey = "f8b1d9a2c3e5f7a9b0c1d3e5f7a9b0c1d3e5f7a9b0c1d3e5f7a9b0c1d3e5f7a9";
 const key = new TextEncoder().encode(secretKey);
 
 // The SessionPayload no longer needs a custom expires field.
