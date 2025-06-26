@@ -105,7 +105,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             </Link>
             <TooltipProvider>
                 {navItems.map((item) => (
-                <NavItem key={item.href} {...item} pathname={pathname} />
+                <NavItem key={item.label} {...item} pathname={pathname} />
                 ))}
             </TooltipProvider>
             </nav>
@@ -129,7 +129,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                     <span className="sr-only">EduSpark</span>
                     </Link>
                     {navItems.map((item) => (
-                    <MobileNavItem key={item.href} {...item} pathname={pathname} />
+                    <MobileNavItem key={item.label} {...item} pathname={pathname} />
                     ))}
                 </nav>
                 </SheetContent>
