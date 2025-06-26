@@ -1,4 +1,4 @@
-'use server';
+
 /**
  * @fileOverview An AI flow for generating classroom insights for a teacher.
  *

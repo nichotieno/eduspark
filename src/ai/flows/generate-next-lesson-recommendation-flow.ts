@@ -1,4 +1,4 @@
-'use server';
+
 /**
  * @fileOverview An AI flow for recommending the next lesson for a student.
  *
