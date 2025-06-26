@@ -2,6 +2,8 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 
+export const runtime = 'nodejs'; // Force Node.js runtime
+
 export const config = {
   matcher: ['/dashboard/:path*'],
 };
