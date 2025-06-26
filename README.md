@@ -1,4 +1,4 @@
-# EduSpark: Spark Your Brilliance
+gi# EduSpark: Spark Your Brilliance
 
 **An interactive, gamified learning platform designed to make STEM education engaging, effective, and accessible for everyone.**
 
